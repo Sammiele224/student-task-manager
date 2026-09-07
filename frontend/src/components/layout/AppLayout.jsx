@@ -13,6 +13,14 @@ const BREADCRUMBS = {
   '/calendar': 'Calendar',
 }
 
+function breadcrumbFor(pathname) {
+  if (BREADCRUMBS[pathname]) return BREADCRUMBS[pathname]
+  // Detail routes such as /tasks/12 fall back to their parent's label.
+  if (pathname.startsWith('/tasks/')) return 'Assignment'
+  if (pathname.startsWith('/courses/')) return 'Course'
+  return 'Overview'
+}
+
 /**
  * App frame: fixed sidebar beside a scrolling content column.
  * Pages render into the <Outlet /> and supply their own PageContainer.
@@ -35,7 +43,7 @@ export default function AppLayout() {
 
       <div className="app-layout__main">
         <Topbar
-          breadcrumb={BREADCRUMBS[pathname] ?? 'Overview'}
+          breadcrumb={breadcrumbFor(pathname)}
           onMenuClick={() => setNavOpen(true)}
         />
         <main className="app-layout__content">

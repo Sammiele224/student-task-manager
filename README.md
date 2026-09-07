@@ -1,21 +1,20 @@
 # University Student Task Manager
 
-> **THE LAST OF US** · Capstone Project · 7–18 September 2026
-
-A web app where a student adds their courses, tracks every assignment with a due
-date and a priority, and sees at a glance what is overdue and what is due this
-week.
+A web app where a student adds their courses, then tracks every assignment with
+a due date and a priority, and sees at a glance what is overdue and what is due
+this week.
 
 ---
 
-## Table of contents
+## Contents
 
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
+- [API endpoints](#api-endpoints)
+- [Frontend routes](#frontend-routes)
 - [Project structure](#project-structure)
 - [The shared design system](#the-shared-design-system)
-- [How we work together](#how-we-work-together)
-- [Scope](#scope)
+- [Branching](#branching)
 - [Data model](#data-model)
 - [Troubleshooting](#troubleshooting)
 
@@ -38,7 +37,7 @@ week.
 
 You need **Node.js 18+** and **MySQL 8** running locally.
 
-### 1. Clone and enter the project
+### 1. Clone
 
 ```bash
 git clone https://github.com/Sammiele224/student-task-manager.git
@@ -51,8 +50,8 @@ cd student-task-manager
 mysql -u root -p < backend/db/schema.sql
 ```
 
-This creates the `student_task_manager` database with the `courses` and `tasks`
-tables. It is safe to re-run — every statement uses `IF NOT EXISTS`.
+Creates `student_task_manager` with the `courses` and `tasks` tables. Safe to
+re-run — every statement uses `IF NOT EXISTS`.
 
 ### 3. Start the backend
 
@@ -63,7 +62,7 @@ npm install
 npm run dev               # http://localhost:4000
 ```
 
-Check it worked: <http://localhost:4000/api/health> should return
+Check it worked: <http://localhost:4000/api/health> returns
 `{"status":"ok","database":"connected"}`.
 
 ### 4. Start the frontend
@@ -77,17 +76,77 @@ npm run dev               # http://localhost:5173
 ```
 
 Vite proxies every `/api/*` request to the backend on port 4000, so frontend
-code can just call `fetch('/api/courses')` with no host or CORS handling.
+code just calls `fetch('/api/courses')` — no host, no CORS handling.
 
-### Useful commands
+### Commands
 
-| Where      | Command         | What it does                     |
-| ---------- | --------------- | -------------------------------- |
-| `frontend` | `npm run dev`   | Dev server with hot reload       |
-| `frontend` | `npm run build` | Production build into `dist/`    |
-| `frontend` | `npm run lint`  | ESLint — must pass before a PR   |
-| `backend`  | `npm run dev`   | API server, restarts on save     |
-| `backend`  | `npm start`     | API server, no watch             |
+| Where      | Command         | What it does                   |
+| ---------- | --------------- | ------------------------------ |
+| `frontend` | `npm run dev`   | Dev server with hot reload     |
+| `frontend` | `npm run build` | Production build into `dist/`  |
+| `frontend` | `npm run lint`  | ESLint                         |
+| `backend`  | `npm run dev`   | API server, restarts on save   |
+| `backend`  | `npm start`     | API server, no watch           |
+
+---
+
+## API endpoints
+
+```
+GET    /api/courses                list courses
+POST   /api/courses                create course
+PUT    /api/courses/:id            update course
+DELETE /api/courses/:id            delete course
+
+GET    /api/tasks                  list tasks
+                                   ?search= &courseId= &status= &priority= &sort=dueDate
+POST   /api/tasks                  create task
+GET    /api/tasks/:id              one task
+PUT    /api/tasks/:id              update task
+DELETE /api/tasks/:id              delete task
+PATCH  /api/tasks/:id/status       change status only
+
+GET    /api/stats                  dashboard numbers
+GET    /api/health                 server + database check
+```
+
+### Conventions
+
+| Thing             | Convention                                                      |
+| ----------------- | --------------------------------------------------------------- |
+| **Dates**         | ISO `YYYY-MM-DD` everywhere — request, response, database         |
+| **Field names**   | `camelCase` in JSON (`courseId`, `dueDate`), `snake_case` in SQL |
+| **Priority**      | `"low"` \| `"medium"` \| `"high"`                                |
+| **Status**        | `"todo"` \| `"in_progress"` \| `"done"`                          |
+| **Errors**        | Non-2xx with `{ "error": "A human-readable message" }`           |
+| **Overdue**       | `due_date < today AND status != 'done'`                          |
+| **Due this week** | `due_date` within the next 7 days, inclusive of today            |
+
+### `GET /api/stats` response shape
+
+```json
+{
+  "totalTasks": 35,
+  "completedTasks": 22,
+  "overdueTasks": 3,
+  "dueThisWeek": 8,
+  "completionRate": 62
+}
+```
+
+---
+
+## Frontend routes
+
+| Path         | Page        |
+| ------------ | ----------- |
+| `/`          | Overview    |
+| `/dashboard` | → redirects to `/` |
+| `/courses`   | My courses  |
+| `/tasks`     | All tasks   |
+| `/tasks/:id` | Task detail |
+| `/upcoming`  | Upcoming    |
+| `/calendar`  | Calendar    |
 
 ---
 
@@ -100,16 +159,18 @@ student-task-manager/
 │       ├── components/
 │       │   ├── ui/          Button, Input, Select, Card, Badge  ← reuse these
 │       │   └── layout/      AppLayout, Sidebar, Topbar, PageContainer, PageHeader
-│       ├── pages/           One file per route (placeholders for now)
+│       ├── pages/           One file per route
 │       ├── styles/          tokens.css (colours, type, spacing) + global.css
 │       ├── theme/           Light / Cyber theme provider
 │       ├── App.jsx          Route table
 │       └── main.jsx         Entry point
 │
 └── backend/
-    ├── db/schema.sql        MySQL tables
+    ├── db/
+    │   ├── schema.sql       Tables (run this first)
+    │   └── seed.sql         Demo data
     └── src/
-        ├── server.js        Express app — add your routers here
+        ├── server.js        Express app — add routers here
         └── db.js            Shared MySQL connection pool
 ```
 
@@ -117,9 +178,9 @@ student-task-manager/
 
 ## The shared design system
 
-**Everyone reuses these. Please do not hand-roll buttons, inputs or card
-surfaces** — if something is missing, extend the shared component in its own PR
-so the whole team gets it.
+**Reuse these components. Please do not hand-roll buttons, inputs or card
+surfaces** — if something is missing, extend the shared component so everything
+stays consistent.
 
 ### Components
 
@@ -136,9 +197,12 @@ import { PageContainer, PageHeader } from '../components/layout'
 | `Card`    | `eyebrow`, `title`, `action`, `footer`, `padding` `none\|sm\|md\|lg`, `tone` `default\|subtle\|outline`, `hoverable` |
 | `Badge`   | `tone` `neutral\|accent\|high\|medium\|low\|overdue\|done`, `dot`          |
 
+`Badge` carries the status colours: `overdue` and `high` are red, `medium`
+amber, `low` and `done` green.
+
 ### What a page looks like
 
-Every page follows the same skeleton, which is what keeps the app feeling like
+Every page follows the same skeleton — this is what keeps the app feeling like
 one product:
 
 ```jsx
@@ -175,7 +239,7 @@ Three edits, nothing else:
 ### Colours and spacing
 
 `src/styles/tokens.css` is the single source of truth. **Never hard-code a
-colour** — use the CSS variable, and both themes work for free:
+colour** — use the variable and both themes work for free:
 
 ```css
 .my-thing {
@@ -187,105 +251,58 @@ colour** — use the CSS variable, and both themes work for free:
 }
 ```
 
-Most-used tokens:
-
-| Purpose            | Variable                                                    |
-| ------------------ | ----------------------------------------------------------- |
-| Page / card / panel| `--bg-page`, `--bg-surface`, `--bg-surface-subtle`          |
-| Text               | `--text-primary`, `--text-secondary`, `--text-muted`         |
-| Brand action       | `--accent`, `--accent-hover`, `--accent-contrast`, `--accent-soft` |
-| Status             | `--danger`, `--warning`, `--success` (+ each `-soft`)        |
-| Course colours     | `--course-green`, `--course-purple`, `--course-amber`, `--course-blue` |
-| Borders            | `--border`, `--border-strong`                                |
-| Spacing            | `--space-1` … `--space-16` (4px scale)                       |
-| Radii              | `--radius-sm\|md\|lg\|xl\|pill`                              |
+| Purpose             | Variable                                                     |
+| ------------------- | ------------------------------------------------------------ |
+| Page / card / panel | `--bg-page`, `--bg-surface`, `--bg-surface-subtle`           |
+| Text                | `--text-primary`, `--text-secondary`, `--text-muted`          |
+| Brand action        | `--accent`, `--accent-hover`, `--accent-contrast`, `--accent-soft` |
+| Status              | `--danger`, `--warning`, `--success` (+ each `-soft`)         |
+| Course colours      | `--course-green`, `--course-purple`, `--course-amber`, `--course-blue` |
+| Borders             | `--border`, `--border-strong`                                 |
+| Spacing             | `--space-1` … `--space-16` (4px scale)                        |
+| Radii               | `--radius-sm\|md\|lg\|xl\|pill`                               |
 
 ### Themes
 
-Two themes ship with the app: **Light** (warm paper, forest green) and **Cyber**
-(near-black, mint). The switch lives at the bottom of the sidebar. It follows
-the operating system preference until someone picks one, then remembers it.
+Two themes: **Light** (warm paper, forest green) and **Cyber** (near-black,
+mint). The switch is at the bottom of the sidebar. It follows the operating
+system preference until someone picks one, then remembers it.
 
 Because everything reads from tokens, you never write theme-specific CSS.
 
-> **Note on styling approach:** the team hasn't settled on Tailwind vs. plain CSS
-> yet. Plain CSS keeps that door open — the token palette in `tokens.css` maps
-> directly onto a Tailwind theme config later, and only component files would
-> change.
+> **Styling approach is not final.** Plain CSS keeps the door open — the token
+> palette maps directly onto a Tailwind theme config later, and only component
+> files would change.
 
 ---
 
-## How we work together
+## Branching
 
-`main` is protected. **You cannot push to it directly.**
+`main` is protected: no direct pushes, and every pull request needs one
+approving review before it can merge.
 
 ```bash
 git checkout main
 git pull
-git checkout -b feat/us-01-add-course
+git checkout -b feature/task-create
 
 # ...work, commit...
 
-git push -u origin feat/us-01-add-course
+git push -u origin feature/task-create
 ```
 
-Then open a Pull Request on GitHub. It needs **1 approving review** before it
-can merge.
+Then open a pull request.
 
-### Branch naming
+Branch names: `feature/<short-description>`, or `fix/<short-description>` for a
+bug.
 
-`<type>/<story-id>-<short-description>`
+Before opening a pull request:
 
-| Type    | Use for              | Example                       |
-| ------- | -------------------- | ----------------------------- |
-| `feat`  | A user story         | `feat/us-05-add-task`         |
-| `fix`   | A bug                | `fix/us-10-overdue-highlight` |
-| `chore` | Tooling, config, docs| `chore/eslint-config`         |
-
-### Before you open a PR
-
-- [ ] `npm run lint` passes in `frontend`
-- [ ] `npm run build` passes in `frontend`
-- [ ] You reused the shared components instead of writing new buttons/inputs
-- [ ] No hard-coded colours — tokens only
-- [ ] Checked the page in **both** Light and Cyber themes
-- [ ] `.env` is not committed
-
-### Reviewing
-
-Every PR needs one teammate's approval. Review promptly — a blocked PR blocks a
-person. Leave a comment even when you approve.
-
----
-
-## Scope
-
-### Must have
-
-| ID    | Feature       | Story                                              |
-| ----- | ------------- | -------------------------------------------------- |
-| US-01 | Course CRUD   | Add a course (unique code enforced)                 |
-| US-02 | Course CRUD   | List courses, with an empty state                   |
-| US-03 | Course CRUD   | Edit a course                                       |
-| US-04 | Course CRUD   | Delete a course (warn if it still has tasks)        |
-| US-05 | Task CRUD     | Add a task (course, title, due date required)       |
-| US-06 | Task CRUD     | List tasks with course, due date, priority, status  |
-| US-07 | Task CRUD     | Edit a task                                         |
-| US-08 | Task CRUD     | Delete a task                                       |
-| US-09 | Task status   | todo → in progress → done, records completion time  |
-| US-10 | Upcoming view | Sorted by due date, overdue highlighted in red      |
-| US-11 | Search        | Search tasks by title, case-insensitive             |
-| US-12 | Filters       | Filter by course, priority and status; combinable   |
-| US-13 | Dashboard     | Total, overdue, due this week, completion rate      |
-
-### Nice to have
-
-- **US-14 — Student login.** Day 8 only, and only if the MVP is stable.
-
-### Out of scope
-
-Mobile app · push notifications · Google Calendar sync · file attachments ·
-sharing tasks between students · recurring tasks.
+- `npm run lint` passes in `frontend`
+- `npm run build` passes in `frontend`
+- No hard-coded colours — tokens only
+- Checked in both Light and Cyber themes
+- No `.env` or credentials committed
 
 ---
 
@@ -302,9 +319,14 @@ done)*, `created_at`, `completed_at`
 Two rules are enforced by the database itself, so they hold even if an
 application-level check is missed:
 
-- `courses.code` is `UNIQUE` — a duplicate code fails (US-01, US-03).
+- `courses.code` is `UNIQUE` — a duplicate code fails.
 - `tasks.course_id` uses `ON DELETE RESTRICT` — deleting a course that still has
-  tasks fails rather than silently destroying them (US-04).
+  tasks fails rather than silently destroying them. Catch the error and return a
+  clear message.
+
+> Validation such as "due date cannot be in the past" belongs in the
+> `POST /api/tasks` handler, not the database — `seed.sql` inserts directly and
+> must be able to create overdue rows for testing.
 
 ---
 
@@ -317,16 +339,17 @@ that `DB_USER` / `DB_PASSWORD` match your local install.
 **`ER_BAD_DB_ERROR: Unknown database`**
 You haven't created the schema yet — run step 2 of Getting started.
 
-**Frontend calls return 404 / HTML instead of JSON**
-The backend isn't running. Start it on port 4000; the Vite proxy expects it
-there.
+**Frontend calls return 404 or HTML instead of JSON**
+The backend isn't running. Start it on port 4000; the Vite proxy expects it there.
+
+**Dates arrive as `2026-09-07T00:00:00.000Z` instead of `2026-09-07`**
+The pool sets `dateStrings: true`, so MySQL returns plain `YYYY-MM-DD`. If you
+see a timestamp, something wrapped the value in `new Date()` — don't.
+
+**Deleting a course returns a 500**
+That is `ON DELETE RESTRICT` doing its job. Catch the `ER_ROW_IS_REFERENCED_2`
+error and return a 409 with a clear message.
 
 **Styles look unstyled or colours are wrong**
-Make sure your component imports its own `.css` file, and that you're using
-token variables rather than literal hex values.
-
----
-
-## Team
-
-**THE LAST OF US** — 7 members · 10 business days · 7–18 September 2026
+Make sure your component imports its own `.css` file, and that you're using token
+variables rather than literal hex values.
