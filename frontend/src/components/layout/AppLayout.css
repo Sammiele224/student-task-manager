@@ -1,0 +1,29 @@
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+.app-layout__main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.app-layout__content {
+  flex: 1;
+}
+
+.app-layout__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--bg-overlay);
+}
+
+@media (min-width: 901px) {
+  .app-layout__scrim {
+    display: none;
+  }
+}

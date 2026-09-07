@@ -1,0 +1,18 @@
+{
+  "name": "student-task-manager-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "db:init": "mysql -u $DB_USER -p < db/schema.sql"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "mysql2": "^3.11.4"
+  }
+}

@@ -1,0 +1,192 @@
+/* ==========================================================================
+   Design tokens — THE LAST OF US · Student Workspace
+   Single source of truth for colour, type, spacing and motion.
+   Every component reads from these variables. Never hard-code a colour.
+   ========================================================================== */
+
+:root {
+  /* --- Typography ------------------------------------------------------ */
+  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 15px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 38px;
+  --text-4xl: 46px;
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.35;
+  --leading-normal: 1.55;
+
+  /* Small-caps eyebrow label used above every page title */
+  --tracking-eyebrow: 0.14em;
+  --tracking-wide: 0.06em;
+
+  /* --- Spacing scale (4px base) ---------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* --- Radii ------------------------------------------------------------ */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+
+  /* --- Layout ----------------------------------------------------------- */
+  --sidebar-width: 264px;
+  --topbar-height: 64px;
+  --page-max-width: 1360px;
+
+  /* --- Motion ----------------------------------------------------------- */
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --duration-fast: 120ms;
+  --duration: 180ms;
+}
+
+/* ==========================================================================
+   LIGHT theme — warm off-white paper, deep forest green accent
+   ========================================================================== */
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  --bg-page: #f4f3ee;
+  --bg-sidebar: #fbfaf6;
+  --bg-surface: #ffffff;
+  --bg-surface-subtle: #f7f6f1;
+  --bg-surface-hover: #efeee7;
+  --bg-overlay: rgba(31, 36, 29, 0.45);
+
+  --border: #e4e2d9;
+  --border-strong: #d2cfc3;
+
+  --text-primary: #1f241d;
+  --text-secondary: #5f665a;
+  --text-muted: #8e9488;
+
+  --accent: #2e4a33;
+  --accent-hover: #243b28;
+  --accent-contrast: #ffffff;
+  --accent-soft: #e7ebe0;
+  --accent-soft-text: #2e4a33;
+
+  --danger: #b3402c;
+  --danger-soft: #fbece8;
+  --warning: #b07a28;
+  --warning-soft: #f8f0e0;
+  --success: #3f7a4f;
+  --success-soft: #e7f0e7;
+
+  --course-green: #4e6b4c;
+  --course-purple: #9b85c4;
+  --course-amber: #c79a46;
+  --course-blue: #6e9ac4;
+
+  --shadow-sm: 0 1px 2px rgba(31, 36, 29, 0.05);
+  --shadow-md: 0 2px 8px rgba(31, 36, 29, 0.07);
+  --shadow-lg: 0 12px 32px rgba(31, 36, 29, 0.12);
+  --focus-ring: 0 0 0 3px rgba(46, 74, 51, 0.18);
+}
+
+/* ==========================================================================
+   CYBER theme (dark) — near-black, mint accent
+   ========================================================================== */
+[data-theme='cyber'] {
+  color-scheme: dark;
+
+  --bg-page: #0a0e0d;
+  --bg-sidebar: #070a09;
+  --bg-surface: #101614;
+  --bg-surface-subtle: #141b19;
+  --bg-surface-hover: #1a2320;
+  --bg-overlay: rgba(0, 0, 0, 0.65);
+
+  --border: #1f2a27;
+  --border-strong: #2c3936;
+
+  --text-primary: #e6ede9;
+  --text-secondary: #93a09b;
+  --text-muted: #6b7873;
+
+  --accent: #6fe0c0;
+  --accent-hover: #8ae9ce;
+  --accent-contrast: #06120e;
+  --accent-soft: #10241e;
+  --accent-soft-text: #6fe0c0;
+
+  --danger: #f0697d;
+  --danger-soft: #2a1418;
+  --warning: #e0b368;
+  --warning-soft: #241c10;
+  --success: #6fe0c0;
+  --success-soft: #10241e;
+
+  --course-green: #7fb48a;
+  --course-purple: #b49be0;
+  --course-amber: #e0bc72;
+  --course-blue: #86b4e0;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --focus-ring: 0 0 0 3px rgba(111, 224, 192, 0.22);
+}
+
+/* Respect OS preference until the user picks a theme explicitly. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --bg-page: #0a0e0d;
+    --bg-sidebar: #070a09;
+    --bg-surface: #101614;
+    --bg-surface-subtle: #141b19;
+    --bg-surface-hover: #1a2320;
+    --bg-overlay: rgba(0, 0, 0, 0.65);
+
+    --border: #1f2a27;
+    --border-strong: #2c3936;
+
+    --text-primary: #e6ede9;
+    --text-secondary: #93a09b;
+    --text-muted: #6b7873;
+
+    --accent: #6fe0c0;
+    --accent-hover: #8ae9ce;
+    --accent-contrast: #06120e;
+    --accent-soft: #10241e;
+    --accent-soft-text: #6fe0c0;
+
+    --danger: #f0697d;
+    --danger-soft: #2a1418;
+    --warning: #e0b368;
+    --warning-soft: #241c10;
+    --success: #6fe0c0;
+    --success-soft: #10241e;
+
+    --course-green: #7fb48a;
+    --course-purple: #b49be0;
+    --course-amber: #e0bc72;
+    --course-blue: #86b4e0;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+    --focus-ring: 0 0 0 3px rgba(111, 224, 192, 0.22);
+  }
+}

@@ -1,0 +1,97 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--duration) var(--ease),
+    box-shadow var(--duration) var(--ease),
+    transform var(--duration) var(--ease);
+}
+
+/* ---- Tones ---- */
+.card--subtle {
+  background: var(--bg-surface-subtle);
+  box-shadow: none;
+}
+
+.card--outline {
+  background: transparent;
+  border-style: dashed;
+  box-shadow: none;
+}
+
+/* ---- Padding ---- */
+.card--pad-none {
+  padding: 0;
+}
+.card--pad-sm {
+  padding: var(--space-4);
+}
+.card--pad-md {
+  padding: var(--space-5);
+}
+.card--pad-lg {
+  padding: var(--space-8);
+}
+
+/* ---- Interaction ---- */
+.card--hoverable {
+  cursor: pointer;
+}
+
+.card--hoverable:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.card--hoverable:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ---- Regions ---- */
+.card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.card__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.card__title {
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+}
+
+.card__action {
+  flex-shrink: 0;
+}
+
+.card__body {
+  min-width: 0;
+}
+
+.card__footer {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+/* A card with no padding still needs breathing room in its regions. */
+.card--pad-none > .card__header,
+.card--pad-none > .card__footer {
+  padding: var(--space-5);
+}
+
+.card--pad-none > .card__footer {
+  padding-top: var(--space-4);
+}

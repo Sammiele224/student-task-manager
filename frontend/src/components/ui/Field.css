@@ -1,0 +1,135 @@
+/* Shared chrome for Input and Select — label, hint, error, control shell. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.field--full {
+  width: 100%;
+}
+
+.field__label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.field__optional {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.field__required {
+  color: var(--danger);
+  margin-left: 2px;
+}
+
+.field__hint {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.field__error {
+  font-size: var(--text-sm);
+  color: var(--danger);
+}
+
+/* --- Control shell (shared by input, textarea and select) --- */
+.field__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field__input {
+  width: 100%;
+  padding: 10px var(--space-3);
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  transition: border-color var(--duration-fast) var(--ease),
+    background-color var(--duration-fast) var(--ease),
+    box-shadow var(--duration-fast) var(--ease);
+}
+
+.field__input::placeholder {
+  color: var(--text-muted);
+}
+
+.field__input:hover:not(:disabled):not(:focus) {
+  border-color: var(--border-strong);
+}
+
+.field__input:focus {
+  outline: none;
+  background: var(--bg-surface);
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+.field__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.field.is-invalid .field__input {
+  border-color: var(--danger);
+}
+
+.field.is-invalid .field__input:focus {
+  box-shadow: 0 0 0 3px var(--danger-soft);
+}
+
+/* Leading icon (e.g. the search magnifier) */
+.field__icon {
+  position: absolute;
+  left: var(--space-3);
+  display: inline-flex;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.field__icon > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.field__input--with-icon {
+  padding-left: 38px;
+}
+
+/* Textarea variant */
+textarea.field__input {
+  min-height: 96px;
+  resize: vertical;
+  line-height: var(--leading-normal);
+}
+
+/* --- Select-specific --- */
+.field__select {
+  appearance: none;
+  padding-right: 34px;
+  cursor: pointer;
+}
+
+.field__chevron {
+  position: absolute;
+  right: var(--space-3);
+  display: inline-flex;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.field__chevron > svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Borderless variant used inside toolbars and table rows */
+.field--bare .field__input {
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
