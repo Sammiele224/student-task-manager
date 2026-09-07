@@ -1,7 +1,8 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
-import { assertDbConnection, pool } from './db.js'
+import { assertDbConnection } from './db.js'
+import v1Router from './routes/v1/index.js'
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -9,21 +10,10 @@ const PORT = process.env.PORT || 4000
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }))
 app.use(express.json())
 
-// --- Health check -----------------------------------------------------------
-app.get('/api/health', async (req, res) => {
-  try {
-    await pool.query('SELECT 1')
-    res.json({ status: 'ok', database: 'connected' })
-  } catch (error) {
-    res.status(503).json({ status: 'error', database: 'unreachable', message: error.message })
-  }
-})
-
-// --- Feature routes ---------------------------------------------------------
-// Teammates: add routers here as you build them, e.g.
-//   import coursesRouter from './routes/courses.js'
-//   app.use('/api/courses', coursesRouter)
-//   app.use('/api/tasks', tasksRouter)
+// --- API versions -----------------------------------------------------------
+// Every route lives under a version prefix. When a breaking change is needed,
+// add /api/v2 alongside v1 rather than changing v1 under clients' feet.
+app.use('/api/v1', v1Router)
 
 // --- 404 --------------------------------------------------------------------
 app.use((req, res) => {
@@ -35,7 +25,9 @@ app.use((req, res) => {
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error(err)
-  res.status(err.status || 500).json({ error: err.message || 'Internal server error' })
+  res
+    .status(err.status || 500)
+    .json({ error: err.message || 'Internal server error' })
 })
 
 async function start() {
@@ -49,7 +41,7 @@ async function start() {
   }
 
   app.listen(PORT, () => {
-    console.log(`API listening on http://localhost:${PORT}`)
+    console.log(`API listening on http://localhost:${PORT}/api/v1`)
   })
 }
 

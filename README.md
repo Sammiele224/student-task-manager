@@ -10,7 +10,7 @@ this week.
 
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
-- [API endpoints](#api-endpoints)
+- [REST API](#rest-api)
 - [Frontend routes](#frontend-routes)
 - [Project structure](#project-structure)
 - [The shared design system](#the-shared-design-system)
@@ -62,8 +62,8 @@ npm install
 npm run dev               # http://localhost:4000
 ```
 
-Check it worked: <http://localhost:4000/api/health> returns
-`{"status":"ok","database":"connected"}`.
+Check it worked: <http://localhost:4000/api/v1/health> returns
+`{"status":"ok","version":"v1","database":"connected"}`.
 
 ### 4. Start the frontend
 
@@ -76,7 +76,7 @@ npm run dev               # http://localhost:5173
 ```
 
 Vite proxies every `/api/*` request to the backend on port 4000, so frontend
-code just calls `fetch('/api/courses')` — no host, no CORS handling.
+code just calls `fetch('/api/v1/courses')` — no host, no CORS handling.
 
 ### Commands
 
@@ -90,27 +90,73 @@ code just calls `fetch('/api/courses')` — no host, no CORS handling.
 
 ---
 
-## API endpoints
+## REST API
+
+Base URL: **`/api/v1`**
+
+Every route is versioned. When a breaking change is needed, add `/api/v2`
+alongside `v1` rather than changing `v1` under clients that already use it.
+
+### Resources
 
 ```
-GET    /api/courses                list courses
-POST   /api/courses                create course
-PUT    /api/courses/:id            update course
-DELETE /api/courses/:id            delete course
+GET    /api/v1/courses              list courses
+POST   /api/v1/courses              create a course
+GET    /api/v1/courses/:id          one course
+PUT    /api/v1/courses/:id          replace a course
+PATCH  /api/v1/courses/:id          update some fields
+DELETE /api/v1/courses/:id          delete a course
 
-GET    /api/tasks                  list tasks
-                                   ?search= &courseId= &status= &priority= &sort=dueDate
-POST   /api/tasks                  create task
-GET    /api/tasks/:id              one task
-PUT    /api/tasks/:id              update task
-DELETE /api/tasks/:id              delete task
-PATCH  /api/tasks/:id/status       change status only
+GET    /api/v1/courses/:id/tasks    tasks belonging to one course
 
-GET    /api/stats                  dashboard numbers
-GET    /api/health                 server + database check
+GET    /api/v1/tasks                list tasks
+POST   /api/v1/tasks                create a task
+GET    /api/v1/tasks/:id            one task
+PUT    /api/v1/tasks/:id            replace a task
+PATCH  /api/v1/tasks/:id            update some fields, e.g. { "status": "done" }
+DELETE /api/v1/tasks/:id            delete a task
+
+GET    /api/v1/stats                dashboard numbers
+GET    /api/v1/health               server + database check
 ```
 
-### Conventions
+### Query parameters on `GET /api/v1/tasks`
+
+| Parameter   | Example              | Effect                          |
+| ----------- | -------------------- | ------------------------------- |
+| `search`    | `?search=report`     | Case-insensitive title match    |
+| `courseId`  | `?courseId=3`        | Only tasks in that course       |
+| `status`    | `?status=todo`       | Filter by status                |
+| `priority`  | `?priority=high`     | Filter by priority              |
+| `sort`      | `?sort=dueDate`      | `dueDate`, `priority`, `createdAt` |
+
+They combine: `?courseId=3&status=todo&search=report&sort=dueDate`.
+
+### REST conventions
+
+- **Paths are plural nouns, never verbs.** The HTTP method is the verb, so it is
+  `DELETE /api/v1/tasks/7`, not `POST /api/v1/tasks/7/delete`.
+- **Changing only the status is a `PATCH`** on the task itself:
+  `PATCH /api/v1/tasks/7` with `{ "status": "done" }`. No separate endpoint.
+- **A response never returns 200 with an error inside it.** Use the status code.
+
+| Code | When                                                       |
+| ---- | ---------------------------------------------------------- |
+| 200  | Successful `GET`, `PUT`, `PATCH`                            |
+| 201  | Successful `POST` — include the created record in the body  |
+| 204  | Successful `DELETE` — empty body                            |
+| 400  | Validation failed (missing title, bad date)                 |
+| 404  | That id does not exist                                      |
+| 409  | Conflict — duplicate course code, or deleting a course that still has tasks |
+| 500  | Unexpected server error                                     |
+
+Errors use one shape:
+
+```json
+{ "error": "A course with the code CS301 already exists." }
+```
+
+### Data conventions
 
 | Thing             | Convention                                                      |
 | ----------------- | --------------------------------------------------------------- |
@@ -118,11 +164,10 @@ GET    /api/health                 server + database check
 | **Field names**   | `camelCase` in JSON (`courseId`, `dueDate`), `snake_case` in SQL |
 | **Priority**      | `"low"` \| `"medium"` \| `"high"`                                |
 | **Status**        | `"todo"` \| `"in_progress"` \| `"done"`                          |
-| **Errors**        | Non-2xx with `{ "error": "A human-readable message" }`           |
 | **Overdue**       | `due_date < today AND status != 'done'`                          |
 | **Due this week** | `due_date` within the next 7 days, inclusive of today            |
 
-### `GET /api/stats` response shape
+### `GET /api/v1/stats` response shape
 
 ```json
 {
@@ -170,7 +215,8 @@ student-task-manager/
     │   ├── schema.sql       Tables (run this first)
     │   └── seed.sql         Demo data
     └── src/
-        ├── server.js        Express app — add routers here
+        ├── routes/v1/       Versioned API routers — add resources here
+        ├── server.js        Express app, mounts /api/v1
         └── db.js            Shared MySQL connection pool
 ```
 
@@ -325,7 +371,7 @@ application-level check is missed:
   clear message.
 
 > Validation such as "due date cannot be in the past" belongs in the
-> `POST /api/tasks` handler, not the database — `seed.sql` inserts directly and
+> `POST /api/v1/tasks` handler, not the database — `seed.sql` inserts directly and
 > must be able to create overdue rows for testing.
 
 ---
