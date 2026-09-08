@@ -10,7 +10,6 @@ this week.
 
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
-- [REST API](#rest-api)
 - [Frontend routes](#frontend-routes)
 - [Project structure](#project-structure)
 - [The shared design system](#the-shared-design-system)
@@ -87,97 +86,6 @@ code just calls `fetch('/api/v1/courses')` — no host, no CORS handling.
 | `frontend` | `npm run lint`  | ESLint                         |
 | `backend`  | `npm run dev`   | API server, restarts on save   |
 | `backend`  | `npm start`     | API server, no watch           |
-
----
-
-## REST API
-
-Base URL: **`/api/v1`**
-
-Every route is versioned. When a breaking change is needed, add `/api/v2`
-alongside `v1` rather than changing `v1` under clients that already use it.
-
-### Resources
-
-```
-GET    /api/v1/courses              list courses
-POST   /api/v1/courses              create a course
-GET    /api/v1/courses/:id          one course
-PUT    /api/v1/courses/:id          replace a course
-PATCH  /api/v1/courses/:id          update some fields
-DELETE /api/v1/courses/:id          delete a course
-
-GET    /api/v1/courses/:id/tasks    tasks belonging to one course
-
-GET    /api/v1/tasks                list tasks
-POST   /api/v1/tasks                create a task
-GET    /api/v1/tasks/:id            one task
-PUT    /api/v1/tasks/:id            replace a task
-PATCH  /api/v1/tasks/:id            update some fields, e.g. { "status": "done" }
-DELETE /api/v1/tasks/:id            delete a task
-
-GET    /api/v1/stats                dashboard numbers
-GET    /api/v1/health               server + database check
-```
-
-### Query parameters on `GET /api/v1/tasks`
-
-| Parameter   | Example              | Effect                          |
-| ----------- | -------------------- | ------------------------------- |
-| `search`    | `?search=report`     | Case-insensitive title match    |
-| `courseId`  | `?courseId=3`        | Only tasks in that course       |
-| `status`    | `?status=todo`       | Filter by status                |
-| `priority`  | `?priority=high`     | Filter by priority              |
-| `sort`      | `?sort=dueDate`      | `dueDate`, `priority`, `createdAt` |
-
-They combine: `?courseId=3&status=todo&search=report&sort=dueDate`.
-
-### REST conventions
-
-- **Paths are plural nouns, never verbs.** The HTTP method is the verb, so it is
-  `DELETE /api/v1/tasks/7`, not `POST /api/v1/tasks/7/delete`.
-- **Changing only the status is a `PATCH`** on the task itself:
-  `PATCH /api/v1/tasks/7` with `{ "status": "done" }`. No separate endpoint.
-- **A response never returns 200 with an error inside it.** Use the status code.
-
-| Code | When                                                       |
-| ---- | ---------------------------------------------------------- |
-| 200  | Successful `GET`, `PUT`, `PATCH`                            |
-| 201  | Successful `POST` — include the created record in the body  |
-| 204  | Successful `DELETE` — empty body                            |
-| 400  | Validation failed (missing title, bad date)                 |
-| 404  | That id does not exist                                      |
-| 409  | Conflict — duplicate course code, or deleting a course that still has tasks |
-| 500  | Unexpected server error                                     |
-
-Errors use one shape:
-
-```json
-{ "error": "A course with the code CS301 already exists." }
-```
-
-### Data conventions
-
-| Thing             | Convention                                                      |
-| ----------------- | --------------------------------------------------------------- |
-| **Dates**         | ISO `YYYY-MM-DD` everywhere — request, response, database         |
-| **Field names**   | `camelCase` in JSON (`courseId`, `dueDate`), `snake_case` in SQL |
-| **Priority**      | `"low"` \| `"medium"` \| `"high"`                                |
-| **Status**        | `"todo"` \| `"in_progress"` \| `"done"`                          |
-| **Overdue**       | `due_date < today AND status != 'done'`                          |
-| **Due this week** | `due_date` within the next 7 days, inclusive of today            |
-
-### `GET /api/v1/stats` response shape
-
-```json
-{
-  "totalTasks": 35,
-  "completedTasks": 22,
-  "overdueTasks": 3,
-  "dueThisWeek": 8,
-  "completionRate": 62
-}
-```
 
 ---
 
@@ -356,7 +264,8 @@ Before opening a pull request:
 
 One course has many tasks.
 
-**courses** — `id`, `name`, `code` *(unique)*, `color`, `created_at`
+**courses** — `id`, `name`, `code` *(unique)*, `color` *(hex, e.g. `#3B82F6`)*,
+`created_at`
 
 **tasks** — `id`, `course_id` *(FK → courses.id)*, `title`, `description`,
 `due_date`, `priority` *(low | medium | high)*, `status` *(todo | in_progress |
@@ -366,13 +275,13 @@ Two rules are enforced by the database itself, so they hold even if an
 application-level check is missed:
 
 - `courses.code` is `UNIQUE` — a duplicate code fails.
+- `courses.color` must match `#RRGGBB`.
 - `tasks.course_id` uses `ON DELETE RESTRICT` — deleting a course that still has
   tasks fails rather than silently destroying them. Catch the error and return a
   clear message.
 
-> Validation such as "due date cannot be in the past" belongs in the
-> `POST /api/v1/tasks` handler, not the database — `seed.sql` inserts directly and
-> must be able to create overdue rows for testing.
+> `seed.sql` inserts directly and can therefore create rows with past due dates,
+> which the demo needs.
 
 ---
 
@@ -393,8 +302,9 @@ The pool sets `dateStrings: true`, so MySQL returns plain `YYYY-MM-DD`. If you
 see a timestamp, something wrapped the value in `new Date()` — don't.
 
 **Deleting a course returns a 500**
-That is `ON DELETE RESTRICT` doing its job. Catch the `ER_ROW_IS_REFERENCED_2`
-error and return a 409 with a clear message.
+That is `ON DELETE RESTRICT` doing its job — the course still has tasks. Catch
+the `ER_ROW_IS_REFERENCED_2` error and return whatever the API contract
+specifies for this case.
 
 **Styles look unstyled or colours are wrong**
 Make sure your component imports its own `.css` file, and that you're using token
