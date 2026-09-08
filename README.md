@@ -14,7 +14,6 @@ this week.
 - [Project structure](#project-structure)
 - [The shared design system](#the-shared-design-system)
 - [Branching](#branching)
-- [Data model](#data-model)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -34,7 +33,7 @@ this week.
 
 ## Getting started
 
-You need **Node.js 18+** and **MySQL 8** running locally.
+You need **Node.js 18+**. The backend also needs **MySQL 8** once it is built.
 
 ### 1. Clone
 
@@ -43,30 +42,7 @@ git clone https://github.com/Sammiele224/student-task-manager.git
 cd student-task-manager
 ```
 
-### 2. Create the database
-
-```bash
-mysql -u root -p < backend/db/schema.sql
-```
-
-Creates `student_task_manager` with the `courses` and `tasks` tables. Safe to
-re-run — every statement uses `IF NOT EXISTS`.
-
-### 3. Start the backend
-
-```bash
-cd backend
-cp .env.example .env      # then fill in your MySQL password
-npm install
-npm run dev               # http://localhost:4000
-```
-
-Check it worked: <http://localhost:4000/api/v1/health> returns
-`{"status":"ok","version":"v1","database":"connected"}`.
-
-### 4. Start the frontend
-
-In a second terminal:
+### 2. Start the frontend
 
 ```bash
 cd frontend
@@ -74,8 +50,23 @@ npm install
 npm run dev               # http://localhost:5173
 ```
 
-Vite proxies every `/api/*` request to the backend on port 4000, so frontend
-code just calls `fetch('/api/v1/courses')` — no host, no CORS handling.
+That is enough to see the app. Every page is a placeholder until the features
+are built.
+
+### 3. The backend
+
+`backend/` is a skeleton: the folders, `package.json` and `.env.example` are in
+place, and the source files are empty for the backend team to write.
+
+```bash
+cd backend
+cp .env.example .env      # then fill in your MySQL credentials
+npm install
+```
+
+Vite proxies every `/api/*` request to port 4000, so once a server is running
+there, frontend code can call `fetch('/api/v1/courses')` with no host and no
+CORS handling.
 
 ### Commands
 
@@ -118,14 +109,13 @@ student-task-manager/
 │       ├── App.jsx          Route table
 │       └── main.jsx         Entry point
 │
-└── backend/
+└── backend/             Skeleton — source files are empty
     ├── db/
-    │   ├── schema.sql       Tables (run this first)
-    │   └── seed.sql         Demo data
+    │   └── schema.sql
     └── src/
-        ├── routes/v1/       Versioned API routers — add resources here
-        ├── server.js        Express app, mounts /api/v1
-        └── db.js            Shared MySQL connection pool
+        ├── routes/v1/
+        ├── server.js
+        └── db.js
 ```
 
 ---
@@ -260,52 +250,19 @@ Before opening a pull request:
 
 ---
 
-## Data model
-
-One course has many tasks.
-
-**courses** — `id`, `name`, `code` *(unique)*, `color` *(hex, e.g. `#3B82F6`)*,
-`created_at`
-
-**tasks** — `id`, `course_id` *(FK → courses.id)*, `title`, `description`,
-`due_date`, `priority` *(low | medium | high)*, `status` *(todo | in_progress |
-done)*, `created_at`, `completed_at`
-
-Two rules are enforced by the database itself, so they hold even if an
-application-level check is missed:
-
-- `courses.code` is `UNIQUE` — a duplicate code fails.
-- `courses.color` must match `#RRGGBB`.
-- `tasks.course_id` uses `ON DELETE RESTRICT` — deleting a course that still has
-  tasks fails rather than silently destroying them. Catch the error and return a
-  clear message.
-
-> `seed.sql` inserts directly and can therefore create rows with past due dates,
-> which the demo needs.
-
----
-
 ## Troubleshooting
 
-**`Could not connect to MySQL`**
-MySQL isn't running, or `backend/.env` is wrong. Check the service is up and
-that `DB_USER` / `DB_PASSWORD` match your local install.
-
-**`ER_BAD_DB_ERROR: Unknown database`**
-You haven't created the schema yet — run step 2 of Getting started.
-
 **Frontend calls return 404 or HTML instead of JSON**
-The backend isn't running. Start it on port 4000; the Vite proxy expects it there.
-
-**Dates arrive as `2026-09-07T00:00:00.000Z` instead of `2026-09-07`**
-The pool sets `dateStrings: true`, so MySQL returns plain `YYYY-MM-DD`. If you
-see a timestamp, something wrapped the value in `new Date()` — don't.
-
-**Deleting a course returns a 500**
-That is `ON DELETE RESTRICT` doing its job — the course still has tasks. Catch
-the `ER_ROW_IS_REFERENCED_2` error and return whatever the API contract
-specifies for this case.
+No server is running on port 4000 yet. The Vite proxy forwards `/api/*` there,
+so until the backend exists those calls have nowhere to go.
 
 **Styles look unstyled or colours are wrong**
-Make sure your component imports its own `.css` file, and that you're using token
-variables rather than literal hex values.
+Make sure your component imports its own `.css` file, and that you are using
+token variables rather than literal hex values.
+
+**A colour looks right in Light and wrong in Cyber**
+Something is hard-coded. Every colour must come from `styles/tokens.css` — that
+is what makes both themes work without theme-specific CSS.
+
+**`npm run dev` in `backend/` does nothing**
+Expected. `src/server.js` is empty until the backend team writes it.
