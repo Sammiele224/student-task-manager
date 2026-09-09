@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   BookOpen,
   CalendarDays,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 import Logo from './Logo'
+import { useTasks } from '../features/Tasks/TaskContext'
 import './Sidebar.css'
 
 /**
@@ -25,12 +26,16 @@ const NAV_ITEMS = [
 ]
 
 export default function Sidebar({ open = false, onNavigate }) {
+  const { pathname } = useLocation()
+  const { completedCount, percentDone } = useTasks()
+  const onTasksPage = pathname.startsWith('/tasks')
+
   return (
     <aside className={`sidebar ${open ? 'is-open' : ''}`}>
       <div className="sidebar__brand">
         <Logo />
         <div className="sidebar__brand-text">
-          <span className="sidebar__brand-name">THE LAST OF US</span>
+          <span className="sidebar__brand-name">THE REST OF US</span>
           <span className="sidebar__brand-sub">STUDENT WORKSPACE</span>
         </div>
       </div>
@@ -61,9 +66,26 @@ export default function Sidebar({ open = false, onNavigate }) {
           ))}
         </ul>
       </nav>
-
-      {/* Progress summary — wire to the dashboard stats endpoint (US-13). */}
-      <div className="sidebar__slot" />
+      
+      {/* progress summary for tasks page */}
+      <div className="sidebar__slot">
+        {onTasksPage && (
+          <div className="sidebar__progress">
+            <p className="sidebar__progress-title">A little more, every day</p>
+            <p className="sidebar__progress-percent">{percentDone}%</p>
+            <p className="sidebar__progress-label">of your tasks complete</p>
+            <div className="sidebar__progress-bar">
+              <div
+                className="sidebar__progress-fill"
+                style={{ width: `${percentDone}%` }}
+              />
+            </div>
+            <p className="sidebar__progress-note">
+              {completedCount} down. You're making progress.
+            </p>
+          </div>
+        )}
+      </div>
 
       <div className="sidebar__footer">
         <span className="u-eyebrow sidebar__nav-label">Make it yours</span>
