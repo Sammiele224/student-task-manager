@@ -4,6 +4,7 @@ import cors from 'cors'
 import { assertDbConnection, pool } from './db.js'
 
 import coursesRouter from './routes/courses.js'
+import tasksRouter from './routes/tasks.js'
 
 process.env.TZ = 'Asia/Ho_Chi_Minh';
 
@@ -27,7 +28,7 @@ app.get('/api/health', async (req, res) => {
 // Teammates: add routers here as you build them
 
 app.use('/api/v1/courses', coursesRouter)
-
+app.use('/api/v1/tasks', tasksRouter)
 // --- 404 --------------------------------------------------------------------
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found', path: req.originalUrl })
