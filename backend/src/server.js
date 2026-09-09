@@ -3,6 +3,10 @@ import express from 'express'
 import cors from 'cors'
 import { assertDbConnection, pool } from './db.js'
 
+import coursesRouter from './routes/courses.js'
+
+process.env.TZ = 'Asia/Ho_Chi_Minh';
+
 const app = express()
 const PORT = process.env.PORT || 4000
 
@@ -20,10 +24,9 @@ app.get('/api/health', async (req, res) => {
 })
 
 // --- Feature routes ---------------------------------------------------------
-// Teammates: add routers here as you build them, e.g.
-//   import coursesRouter from './routes/courses.js'
-//   app.use('/api/courses', coursesRouter)
-//   app.use('/api/tasks', tasksRouter)
+// Teammates: add routers here as you build them
+
+app.use('/api/v1/courses', coursesRouter)
 
 // --- 404 --------------------------------------------------------------------
 app.use((req, res) => {
