@@ -5,6 +5,7 @@ import { assertDbConnection, pool } from './db.js'
 
 import coursesRouter from './routes/courses.js'
 import tasksRouter from './routes/tasks.js'
+import statsRouter from './routes/stats.js'
 
 process.env.TZ = 'Asia/Ho_Chi_Minh';
 
@@ -29,6 +30,7 @@ app.get('/api/health', async (req, res) => {
 
 app.use('/api/v1/courses', coursesRouter)
 app.use('/api/v1/tasks', tasksRouter)
+app.use('/api/v1/stats', statsRouter)
 // --- 404 --------------------------------------------------------------------
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found', path: req.originalUrl })
