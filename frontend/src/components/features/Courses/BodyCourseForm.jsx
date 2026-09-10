@@ -3,25 +3,28 @@ import { ArrowUpRight } from 'lucide-react'
 import { Button } from '../../ui'
 
 const COLOR_OPTIONS = [
-  { key: 'green', label: 'Green', var: '--course-green' },
-  { key: 'blue', label: 'Blue', var: '--course-blue' },
-  { key: 'sage', label: 'Sage', var: '--course-green' },
-  { key: 'purple', label: 'Purple', var: '--course-purple' },
+  { key: 'green', label: 'Green', color: '#7BAE7F' },
+  { key: 'blue', label: 'Blue', color: '#5B8DEF' },
+  { key: 'sage', label: 'Sage', color: '#A8BFA3' },
+  { key: 'purple', label: 'Purple', color: '#9B7EDE' },
 ]
 
-const EMPTY_VALUES = { name: '', code: '', colorKey: 'green' }
-
+const EMPTY_VALUES = {
+  name: '',
+  code: '',
+  color: '#7BAE7F',
+}
 // body form for creat and edit
 export function CourseForm({ initialValues = EMPTY_VALUES, submitLabel = 'Create course', onCancel, onSubmit }) {
   const [name, setName] = useState(initialValues.name)
   const [code, setCode] = useState(initialValues.code)
-  const [colorKey, setColorKey] = useState(initialValues.colorKey)
+  const [color, setColor] = useState(initialValues.color)
 
 
   useEffect(() => {
     setName(initialValues.name)
     setCode(initialValues.code)
-    setColorKey(initialValues.colorKey)
+    setColor(initialValues.color)
   }, [initialValues])
 
   const isValid = name.trim().length > 0 && code.trim().length > 0
@@ -29,7 +32,7 @@ export function CourseForm({ initialValues = EMPTY_VALUES, submitLabel = 'Create
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!isValid) return
-    onSubmit({ name: name.trim(), code: code.trim().toUpperCase(), colorKey })
+    onSubmit({ name: name.trim(), code: code.trim().toUpperCase(), color })
   }
 
   return (
@@ -66,11 +69,12 @@ export function CourseForm({ initialValues = EMPTY_VALUES, submitLabel = 'Create
               key={opt.key}
               type="button"
               role="radio"
-              aria-checked={colorKey === opt.key}
+              aria-checked={color === opt.color}
               aria-label={opt.label}
-              className={`color-swatch ${colorKey === opt.key ? 'color-swatch--selected' : ''}`}
-              style={{ '--swatch-color': `var(${opt.var})` }}
-              onClick={() => setColorKey(opt.key)}
+              className={`color-swatch ${color === opt.color ? 'color-swatch--selected' : ''
+                }`}
+              style={{ '--swatch-color': opt.color }}
+              onClick={() => setColor(opt.color)}
             />
           ))}
         </div>

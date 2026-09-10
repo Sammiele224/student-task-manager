@@ -18,7 +18,7 @@ export function EditCourseModal({ open, onClose, course, onSave }) {
       subtitle="Make this course feels like yours"
     >
       <CourseForm
-        initialValues={{ name: course.name, code: course.code, colorKey: course.colorKey }}
+        initialValues={{ name: course.name, code: course.code, color: course.color }}
         submitLabel="Save changes"
         onCancel={onClose}
         onSubmit={handleSubmit}
