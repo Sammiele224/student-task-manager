@@ -38,7 +38,6 @@ export default function Badge({
     }
   }
 
-  // Tự động format lại text hiển thị cho đẹp (VD: 'in_progress' -> 'In Progress', 'high' -> 'High')
   const formatLabel = (content) => {
     if (!content) return ''
     const val = String(content).toLowerCase().trim()
@@ -51,7 +50,6 @@ export default function Badge({
       case 'to do':
         return 'To Do'
       default:
-        // Viết hoa chữ cái đầu cho các giá trị như high, medium, low, done, overdue...
         return content.charAt(0).toUpperCase() + content.slice(1)
     }
   }
