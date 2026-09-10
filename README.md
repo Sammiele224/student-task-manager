@@ -44,7 +44,13 @@ git clone https://github.com/Sammiele224/student-task-manager.git
 cd student-task-manager
 ```
 
-### 2. Create the database
+### (2). If NO DOCKER DESKTOP INSTALLED, create the database manually; otherwise, skip this step
+
+If you don't have Docker Desktop installed, you'll need to create the database manually.
+
+First, download and install MySQL 8 from <https://dev.mysql.com/downloads/mysql/>.
+
+Then, create the database and tables by running:
 
 ```bash
 mysql -u root -p < backend/db/schema.sql
@@ -53,14 +59,24 @@ mysql -u root -p < backend/db/schema.sql
 Creates `student_task_manager` with the `courses` and `tasks` tables. Safe to
 re-run — every statement uses `IF NOT EXISTS`.
 
-### 3. Start the backend
+Then, populate with demo data:
+
+```bash
+mysql -u root -p < backend/db/seed.sql
+```
+
+### 3. Start the backend with Docker (or without if you created the database manually)
 
 ```bash
 cd backend
-cp .env.example .env      # then fill in your MySQL password
+cp .env.example .env      # then fill in MySQL password 
+
+docker-compose up -d      # only if Docker Desktop installed
+
 npm install
 npm run dev               # http://localhost:4000
 ```
+NOTE: if you use Docker it will be the same as `MYSQL_ROOT_PASSWORD` in `docker-compose.yml`
 
 Check it worked: <http://localhost:4000/api/health> returns
 `{"status":"ok","database":"connected"}`.
