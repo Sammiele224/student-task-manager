@@ -12,7 +12,7 @@ import {
   updateCourse,
   deleteCourse,
 } from '../api/CourseApi'
-import PagePlaceholder from './PagePlaceholder'
+import { PageContainer, PageHeader } from '../components/layout'
 
 import '../styles/features/Course/Course.css'
 import '../styles/features/Course/CourseForm.css'
@@ -137,8 +137,8 @@ export default function Courses() {
   )
 
   return (
-    <>
-      <PagePlaceholder
+    <PageContainer>
+      <PageHeader
         eyebrow="Your academic world"
         title="A home for every course."
         subtitle="Keep your subjects organized. Give every assignment a place to belong."
@@ -258,6 +258,6 @@ export default function Courses() {
         onClose={() => setEditingCourse(null)}
         onSave={handleSaveCourse}
       />
-    </>
+    </PageContainer>
   )
 }
