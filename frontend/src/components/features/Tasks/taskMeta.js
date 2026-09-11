@@ -103,6 +103,23 @@ export function formatTimestamp(dateStr) {
   })
 }
 
+/**
+ * Moves a task to a new status, keeping the completion stamp honest.
+ * Mirrors the tasks table's chk_tasks_completion constraint: a done task
+ * always has a completed time, and anything else never does.
+ */
+export function applyStatus(task, status) {
+  if (status === 'done') {
+    return { ...task, status, completedAt: task.completedAt ?? new Date().toISOString() }
+  }
+  return { ...task, status, completedAt: null }
+}
+
+/** The status a checkbox toggles to: done, or back to to-do. */
+export function nextToggledStatus(task) {
+  return task.status === 'done' ? 'todo' : 'done'
+}
+
 /** `YYYY-MM-DD` for the date input, which refuses any other shape. */
 export function toDateInputValue(dateStr) {
   if (!dateStr) return ''

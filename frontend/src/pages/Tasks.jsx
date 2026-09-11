@@ -36,7 +36,8 @@ function Dropdown({ value, onChange, options, allLabel }) {
 }
 
 export default function Tasks() {
-  const { tasks, courses, updateTask, deleteTask, toggleDone, setTaskStatus } = useTasks()
+  const { tasks, courses, loading, error, clearError, updateTask, deleteTask, toggleDone, setTaskStatus } =
+    useTasks()
 
   const [query, setQuery] = useState('')
   const [course, setCourse] = useState('All')
@@ -76,10 +77,31 @@ export default function Tasks() {
 
   const hasFilters = query.trim() || course !== 'All' || priority !== 'All' || status !== 'All'
 
-  const handleConfirmDelete = () => {
-    deleteTask(taskToDelete.id)
+  const handleConfirmDelete = async () => {
+    const id = taskToDelete.id
     setTaskToDelete(null)
     setEditingTask(null)
+    try {
+      await deleteTask(id)
+    } catch {
+      /* The context holds the reason and shows it above the list. */
+    }
+  }
+
+  const handleStatusChange = async (id, status) => {
+    try {
+      await setTaskStatus(id, status)
+    } catch {
+      /* Already rolled back and reported by the context. */
+    }
+  }
+
+  const handleToggleDone = async (id) => {
+    try {
+      await toggleDone(id)
+    } catch {
+      /* Already rolled back and reported by the context. */
+    }
   }
 
   return (
@@ -92,6 +114,15 @@ export default function Tasks() {
           <Button iconLeft={<Plus size={16} />}>New task</Button>
         }
       />
+
+      {error && (
+        <div className="tasks-banner" role="alert">
+          <span>{error}</span>
+          <button type="button" onClick={clearError} aria-label="Dismiss">
+            ×
+          </button>
+        </div>
+      )}
 
       <div className="tasks-card">
         <div className="tasks-toolbar">
@@ -154,7 +185,7 @@ export default function Tasks() {
 
                   <div className="tasks-board-cards">
                     {columnTasks.map((task) => (
-                      <TaskCard key={task.id} task={task} onStatusChange={setTaskStatus} />
+                      <TaskCard key={task.id} task={task} onStatusChange={handleStatusChange} />
                     ))}
 
                     {columnTasks.length === 0 && <p className="tasks-board-empty">No tasks here.</p>}
@@ -178,7 +209,9 @@ export default function Tasks() {
             </div>
 
             <div>
-              {filtered.length === 0 && (
+              {loading && <p className="tasks-loading">Loading your assignments…</p>}
+
+              {!loading && filtered.length === 0 && (
                 <div className="tasks-empty">
                   <p className="tasks-empty-title">
                     {hasFilters ? 'Nothing matches those filters.' : 'No assignments yet.'}
@@ -191,12 +224,12 @@ export default function Tasks() {
                 </div>
               )}
 
-              {paginatedTasks.map((task) => (
+              {!loading && paginatedTasks.map((task) => (
                 <TaskRow
                   key={task.id}
                   task={task}
-                  onToggleDone={toggleDone}
-                  onStatusChange={setTaskStatus}
+                  onToggleDone={handleToggleDone}
+                  onStatusChange={handleStatusChange}
                   onEdit={setEditingTask}
                 />
               ))}

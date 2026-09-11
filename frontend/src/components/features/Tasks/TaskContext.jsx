@@ -1,56 +1,100 @@
-import { createContext, useContext, useMemo, useState } from 'react'
-import taskData from '../../../data/tasks.json'
-import courseData from '../../../data/course.json'
-import { isTaskOverdue } from './taskMeta'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import {
+  createTask as createTaskRequest,
+  deleteTask as deleteTaskRequest,
+  getTasks,
+  updateTask as updateTaskRequest,
+  updateTaskStatus,
+} from '../../../api/TaskApi'
+import { getCourses } from '../../../api/CourseApi'
+import { applyStatus, isTaskOverdue, nextToggledStatus } from './taskMeta'
 
 const TasksContext = createContext(null)
 
-/** Copies the course name, code and colour onto a task so rows can show them. */
-function withCourse(values, courses) {
-  const course = courses.find((c) => c.id === Number(values.courseId))
-  return {
-    ...values,
-    courseId: Number(values.courseId),
-    courseName: course?.name ?? values.courseName ?? '',
-    courseCode: course?.code ?? values.courseCode ?? '',
-    courseColor: course?.color ?? values.courseColor ?? 'var(--accent)',
-  }
-}
-
-/** Stamps or clears the completion time whenever the status moves. */
-function withCompletion(task, status) {
-  if (status === 'done') {
-    return { ...task, status, completedAt: task.completedAt ?? new Date().toISOString() }
-  }
-  return { ...task, status, completedAt: null }
-}
-
 export function TasksProvider({ children }) {
-  const [tasks, setTasks] = useState(taskData.data)
-  const [courses] = useState(courseData.data)
+  const [tasks, setTasks] = useState([])
+  const [courses, setCourses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  function updateTask(id, values) {
-    setTasks((prev) =>
-      prev.map((t) => {
-        if (t.id !== id) return t
-        const merged = withCourse({ ...t, ...values }, courses)
-        return withCompletion(merged, merged.status)
-      })
-    )
+  /** Pulls the list back from the API. Writes call this when the response
+      does not carry enough to rebuild the row on its own. */
+  const reload = useCallback(async () => {
+    const [taskList, courseList] = await Promise.all([getTasks(), getCourses()])
+    setTasks(taskList)
+    setCourses(courseList)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      try {
+        setLoading(true)
+        setError('')
+        const [taskList, courseList] = await Promise.all([getTasks(), getCourses()])
+        if (cancelled) return
+        setTasks(taskList)
+        setCourses(courseList)
+      } catch (err) {
+        if (!cancelled) setError(err.message || 'Could not reach the server.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  /* Create answers with only an id, title and status, and update answers with
+     just a message, so there is nothing to merge. Reload rather than guess. */
+  async function addTask(values) {
+    await createTaskRequest(values)
+    await reload()
   }
 
-  function deleteTask(id) {
+  async function updateTask(id, values) {
+    await updateTaskRequest(id, values)
+    await reload()
+  }
+
+  /**
+   * Status is the one write a student makes mid-scroll, so it lands on screen
+   * straight away and rolls back if the server disagrees.
+   */
+  async function setTaskStatus(id, newStatus) {
+    const previous = tasks
+    setTasks((prev) => prev.map((t) => (t.id === id ? applyStatus(t, newStatus) : t)))
+
+    try {
+      await updateTaskStatus(id, newStatus)
+    } catch (err) {
+      setTasks(previous)
+      setError(err.message || 'Could not update that status.')
+      throw err
+    }
+  }
+
+  async function toggleDone(id) {
+    const task = tasks.find((t) => t.id === id)
+    if (!task) return
+    await setTaskStatus(id, nextToggledStatus(task))
+  }
+
+  async function deleteTask(id) {
+    const previous = tasks
     setTasks((prev) => prev.filter((t) => t.id !== id))
-  }
 
-  function toggleDone(id) {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? withCompletion(t, t.status === 'done' ? 'todo' : 'done') : t))
-    )
-  }
-
-  function setTaskStatus(id, newStatus) {
-    setTasks((prev) => prev.map((t) => (t.id === id ? withCompletion(t, newStatus) : t)))
+    try {
+      await deleteTaskRequest(id)
+    } catch (err) {
+      setTasks(previous)
+      setError(err.message || 'Could not delete that task.')
+      throw err
+    }
   }
 
   function getTaskById(id) {
@@ -64,7 +108,11 @@ export function TasksProvider({ children }) {
   const value = {
     tasks,
     courses,
-    setTasks,
+    loading,
+    error,
+    reload,
+    clearError: () => setError(''),
+    addTask,
     updateTask,
     deleteTask,
     toggleDone,

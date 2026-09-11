@@ -3,6 +3,37 @@
    The page header comes from the shared PageHeader component.
    ========================================================================== */
 
+/* Anything the server refused: a failed status change, delete or load. */
+.tasks-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--danger-soft);
+  border-radius: var(--radius-md);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: var(--text-base);
+}
+
+.tasks-banner button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 var(--space-1);
+}
+
+.tasks-loading {
+  padding: 56px 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
 /* card */
 .tasks-card {
   border: 1px solid var(--border);

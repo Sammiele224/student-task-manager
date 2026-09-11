@@ -1,95 +1,29 @@
-import React from "react";
+import { useTasks } from "../components/features/Tasks/TaskContext";
+import {
+  daysOverdue,
+  getDashboardStats,
+  getOverdueTasks,
+  getUpcomingTasks,
+} from "../components/features/Tasks/taskStats";
 import "../styles/overview.css";
 
-const stats = {
-  totalTasks: 35,
-  completedCount: 22,
-  overdueCount: 3,
-  dueThisWeekCount: 8,
-  completionRate: 63,
-};
-
-const upcomingTasks = [
-  {
-    id: 102,
-    title: "Build prototype presentation",
-    courseName: "Web Engineering",
-    courseCode: "IT3080",
-    courseColor: "#3B82F6",
-    dueDate: "Sep 10",
-  },
-  {
-    id: 103,
-    title: "Prepare capstone slides",
-    courseName: "Web Engineering",
-    courseCode: "IT3080",
-    courseColor: "#3B82F6",
-    dueDate: "Sep 11",
-  },
-  {
-    id: 104,
-    title: "Complete database assignment",
-    courseName: "Database Systems",
-    courseCode: "IT3020",
-    courseColor: "#10B981",
-    dueDate: "Sep 12",
-  },
-  {
-    id: 105,
-    title: "Review system design notes",
-    courseName: "Software Engineering",
-    courseCode: "IT3040",
-    courseColor: "#8B5CF6",
-    dueDate: "Sep 14",
-  },
-];
-
-const overdueTasks = [
-  {
-    id: 101,
-    title: "Submit capstone report",
-    courseCode: "IT3080",
-    courseColor: "#3B82F6",
-    days: "4 days overdue",
-  },
-  {
-    id: 106,
-    title: "Finish SQL exercises",
-    courseCode: "IT3020",
-    courseColor: "#10B981",
-    days: "3 days overdue",
-  },
-  {
-    id: 107,
-    title: "Upload weekly reflection",
-    courseCode: "IT3040",
-    courseColor: "#8B5CF6",
-    days: "2 days overdue",
-  },
-];
-
-const courses = [
-  {
-    id: 1,
-    name: "Web Engineering",
-    code: "IT3080",
-    color: "#3B82F6",
-  },
-  {
-    id: 2,
-    name: "Database Systems",
-    code: "IT3020",
-    color: "#10B981",
-  },
-  {
-    id: 3,
-    name: "Software Engineering",
-    code: "IT3040",
-    color: "#8B5CF6",
-  },
-];
+/** "Sep 10" — the compact due date the dashboard lists use. */
+function shortDate(dateStr) {
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
 
 function Overview() {
+  /* Every figure below is derived from the shared task list, so marking a task
+     done anywhere in the app moves these numbers straight away. */
+  const { tasks, courses } = useTasks();
+
+  const stats = getDashboardStats(tasks);
+  const upcomingTasks = getUpcomingTasks(tasks);
+  const overdueTasks = getOverdueTasks(tasks);
+
   return (
     <main className="dashboard">
       <div className="dashboard-container">
@@ -104,7 +38,7 @@ function Overview() {
             </p>
           </div>
 
-          
+
         </header>
 
         {/* Stats */}
@@ -163,10 +97,14 @@ function Overview() {
                   </div>
 
                   <span className="task-due">
-                    {task.dueDate}
+                    {shortDate(task.dueDate)}
                   </span>
                 </div>
               ))}
+
+              {upcomingTasks.length === 0 && (
+                <p className="dashboard-empty">Nothing due yet. Enjoy the quiet.</p>
+              )}
             </div>
           </section>
 
@@ -230,11 +168,15 @@ function Overview() {
 
                       {task.courseCode}
                       <span>·</span>
-                      {task.days}
+                      {daysOverdue(task)} days overdue
                     </p>
                   </div>
                 </div>
               ))}
+
+              {overdueTasks.length === 0 && (
+                <p className="dashboard-empty">Nothing overdue. You&apos;re on top of it.</p>
+              )}
             </div>
           </section>
 

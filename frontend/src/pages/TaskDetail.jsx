@@ -33,12 +33,20 @@ import '../styles/features/Task/TaskDetailPage.css'
 export default function TaskDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { getTaskById, courses, updateTask, deleteTask, setTaskStatus, toggleDone } = useTasks()
+  const { getTaskById, courses, loading, updateTask, deleteTask, setTaskStatus, toggleDone } = useTasks()
 
   const [showEdit, setShowEdit] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
 
   const task = getTaskById(id)
+
+  if (loading) {
+    return (
+      <PageContainer>
+        <p className="task-detail-loading">Loading this assignment…</p>
+      </PageContainer>
+    )
+  }
 
   if (!task) {
     return (
@@ -62,9 +70,14 @@ export default function TaskDetail() {
   const priority = priorityMeta(task.priority)
   const done = task.status === 'done'
 
-  const handleDelete = () => {
-    deleteTask(task.id)
-    navigate('/tasks')
+  const handleDelete = async () => {
+    try {
+      await deleteTask(task.id)
+      navigate('/tasks')
+    } catch {
+      /* The task stays put and the context reports why. */
+      setShowDelete(false)
+    }
   }
 
   return (
@@ -133,7 +146,7 @@ export default function TaskDetail() {
               <div className="task-detail-status-row">
                 <StatusSelect
                   value={task.status}
-                  onChange={(status) => setTaskStatus(task.id, status)}
+                  onChange={(status) => setTaskStatus(task.id, status).catch(() => {})}
                   label="Task status"
                   className="task-detail-status"
                 />
@@ -141,7 +154,7 @@ export default function TaskDetail() {
                 <button
                   type="button"
                   className={`task-detail-complete ${done ? 'done' : ''}`}
-                  onClick={() => toggleDone(task.id)}
+                  onClick={() => toggleDone(task.id).catch(() => {})}
                   aria-pressed={done}
                 >
                   <span className={`tasks-checkbox ${done ? 'done' : ''}`} aria-hidden="true">
