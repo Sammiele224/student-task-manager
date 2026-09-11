@@ -1,53 +1,10 @@
-.tasks-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-}
-
-.tasks-eyebrow {
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-.tasks-title {
-  font-size: 40px;
-  line-height: 1.1;
-  color: var(--text-primary);
-  margin: 8px 0 0;
-}
-
-.tasks-subtitle {
-  color: var(--text-secondary);
-  margin: 8px 0 0;
-}
-
-.tasks-new-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  border: none;
-  border-radius: 13px;
-  padding: 10px 18px;
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  margin-top: 30px;
-}
-
-.tasks-new-btn:hover {
-  background: var(--accent-hover);
-}
+/* ==========================================================================
+   Task list — rows, board cards, toolbar and pagination.
+   The page header comes from the shared PageHeader component.
+   ========================================================================== */
 
 /* card */
 .tasks-card {
-  margin: 30px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--bg-surface);
@@ -184,9 +141,10 @@
   margin-top: 12px;
   padding: 0 24px 8px;
   border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
   color: var(--text-muted);
 }
 
@@ -201,10 +159,21 @@
 }
 
 .tasks-empty {
-  padding: 40px 24px;
+  padding: 56px 24px;
   text-align: center;
+}
+
+.tasks-empty-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.tasks-empty-text {
   font-size: 14px;
   color: var(--text-muted);
+  margin: 6px 0 0;
 }
 
 /* assignment cell */
@@ -212,6 +181,36 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
+}
+
+.tasks-assignment-text {
+  min-width: 0;
+}
+
+/* The pencil stays out of the way until the row is hovered or focused. */
+.tasks-row-edit {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  padding: 6px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease);
+}
+
+.tasks-row:hover .tasks-row-edit,
+.tasks-row-edit:focus-visible {
+  opacity: 1;
+}
+
+.tasks-row-edit:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
 }
 
 .tasks-checkbox {
@@ -241,10 +240,15 @@
 }
 
 .tasks-title-text {
+  display: inline-block;
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
-  margin: 0;
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.tasks-title-text:hover {
+  color: var(--accent);
 }
 
 .tasks-title-text.done {
@@ -253,9 +257,21 @@
 }
 
 .tasks-subtext {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
   color: var(--text-muted);
   margin: 2px 0 0;
+}
+
+/* Each course keeps its own colour across rows, cards and the detail page. */
+.tasks-course-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--course-color, var(--accent));
 }
 
 /* due date cell */
@@ -491,18 +507,22 @@
   color: var(--text-muted);
 }
 
-.tasks-board-card-course-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--accent);
-}
-
 .tasks-board-card-title {
+  display: inline-block;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 6px;
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.tasks-board-card-title:hover {
+  color: var(--accent);
+}
+
+.tasks-board-card-title.done {
+  color: var(--text-muted);
+  text-decoration: line-through;
 }
 
 .tasks-board-card-desc {
@@ -536,15 +556,14 @@
   color: var(--danger);
 }
 
-.tasks-board-card-footer .tasks-status select {
+.tasks-status--sm select {
   padding: 5px 22px 5px 10px;
   font-size: 11px;
 }
 
-.tasks-board-card-footer .tasks-status svg {
+.tasks-status--sm svg {
   width: 10px;
   height: 10px;
-  color: currentColor;
 }
 
 .tasks-board-empty {

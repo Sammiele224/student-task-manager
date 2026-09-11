@@ -1,0 +1,104 @@
+/* ==========================================================================
+   Task dialogs — create, edit, delete confirmation.
+   Builds on the shared .modal-* and .form-field chrome in CourseForm.css.
+   ========================================================================== */
+@import '../Course/CourseForm.css';
+
+/* Due date and priority sit side by side, as in the handoff. */
+.task-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.form-field .optional {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* Selects and the notes box match the text inputs they sit beside. */
+.form-field select,
+.form-field textarea {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-surface-subtle);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  transition: border-color var(--duration-fast) var(--ease),
+    box-shadow var(--duration-fast) var(--ease);
+}
+
+.form-field select {
+  cursor: pointer;
+}
+
+.form-field textarea {
+  min-height: 104px;
+  resize: vertical;
+  line-height: var(--leading-normal);
+}
+
+.form-field textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.form-field select:focus,
+.form-field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+  background: var(--bg-surface);
+}
+
+/* Validation message, shown just above the footer. */
+.form-error {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: var(--text-base);
+}
+
+/* Editing puts "Delete task" on the left, away from the save button. */
+.modal-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+}
+
+.modal-footer--split {
+  justify-content: space-between;
+}
+
+/* Message-only dialogs: delete confirmation, and the no-courses nudge. */
+.task-dialog-body {
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  line-height: var(--leading-normal);
+}
+
+.task-dialog-footer {
+  border-top: none;
+  margin-top: 0;
+  padding: var(--space-5) var(--space-6);
+}
+
+@media (max-width: 560px) {
+  .task-form .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-footer--split {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+
+  .modal-footer-actions {
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+}

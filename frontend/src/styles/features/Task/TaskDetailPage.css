@@ -1,0 +1,166 @@
+/* ==========================================================================
+   Task detail page — /tasks/:id
+   ========================================================================== */
+
+.task-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  margin-bottom: calc(var(--space-6) * -1);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.task-detail-back:hover {
+  color: var(--accent);
+}
+
+.task-detail-course {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.task-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Solid red stays reserved for the confirmation dialog itself. */
+.task-detail-actions .btn--ghost.is-danger {
+  color: var(--danger);
+}
+
+.task-detail-actions .btn--ghost.is-danger:not(:disabled):hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* --- Body ------------------------------------------------------------- */
+.task-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.task-detail-main .card__body,
+.task-detail-meta-card .card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.task-detail-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.task-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.task-detail-section-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.task-detail-description {
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text-secondary);
+  white-space: pre-line;
+}
+
+.task-detail-status-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.task-detail-status select {
+  width: auto;
+  min-width: 170px;
+  padding: var(--space-2) var(--space-8) var(--space-2) var(--space-4);
+  font-size: var(--text-base);
+}
+
+/* Mark-as-complete reuses the list checkbox so the gesture reads the same. */
+.task-detail-complete {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease);
+}
+
+.task-detail-complete:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.task-detail-complete.done {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.task-detail-complete .tasks-checkbox {
+  margin: 0;
+  pointer-events: none;
+}
+
+/* --- Details card ----------------------------------------------------- */
+.task-detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.task-detail-meta-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  color: var(--text-muted);
+}
+
+.task-detail-meta-label {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.task-detail-meta-value {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.task-detail-meta-value.overdue {
+  color: var(--danger);
+}
+
+@media (max-width: 900px) {
+  .task-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
