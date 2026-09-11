@@ -4,8 +4,10 @@ import { TaskForm } from './BodyTaskForm'
 export function EditTaskModal({ open, task, onClose, onSave, onDelete, courses }) {
   if (!task) return null
 
-  const handleSubmit = (values) => {
-    onSave(task.id, values)
+  /* Close only once the save has actually gone through. If onSave rejects,
+     the error travels back to the form, which keeps the dialog open. */
+  const handleSubmit = async (values) => {
+    await onSave(task.id, values)
     onClose()
   }
 
