@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import taskData from '../../../data/tasks.json'
 import courseData from '../../../data/course.json'
-import { isTaskOverdue } from './taskMeta'
+import { applyStatus, isTaskOverdue, nextToggledStatus } from './taskMeta'
 
 const TasksContext = createContext(null)
 
@@ -17,14 +17,6 @@ function withCourse(values, courses) {
   }
 }
 
-/** Stamps or clears the completion time whenever the status moves. */
-function withCompletion(task, status) {
-  if (status === 'done') {
-    return { ...task, status, completedAt: task.completedAt ?? new Date().toISOString() }
-  }
-  return { ...task, status, completedAt: null }
-}
-
 export function TasksProvider({ children }) {
   const [tasks, setTasks] = useState(taskData.data)
   const [courses] = useState(courseData.data)
@@ -34,7 +26,7 @@ export function TasksProvider({ children }) {
       prev.map((t) => {
         if (t.id !== id) return t
         const merged = withCourse({ ...t, ...values }, courses)
-        return withCompletion(merged, merged.status)
+        return applyStatus(merged, merged.status)
       })
     )
   }
@@ -44,13 +36,11 @@ export function TasksProvider({ children }) {
   }
 
   function toggleDone(id) {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? withCompletion(t, t.status === 'done' ? 'todo' : 'done') : t))
-    )
+    setTasks((prev) => prev.map((t) => (t.id === id ? applyStatus(t, nextToggledStatus(t)) : t)))
   }
 
   function setTaskStatus(id, newStatus) {
-    setTasks((prev) => prev.map((t) => (t.id === id ? withCompletion(t, newStatus) : t)))
+    setTasks((prev) => prev.map((t) => (t.id === id ? applyStatus(t, newStatus) : t)))
   }
 
   function getTaskById(id) {

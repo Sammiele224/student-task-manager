@@ -617,3 +617,14 @@
     display: none;
   }
 }
+/* =========================================================
+   EMPTY STATES
+   Shown once every task in a list is done or cleared.
+   ========================================================= */
+
+.dashboard-empty {
+  padding: 18px 17px;
+
+  color: var(--text-muted, #8e9488);
+  font-size: 13px;
+}
