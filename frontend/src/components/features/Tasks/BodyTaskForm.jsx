@@ -54,6 +54,7 @@ export function TaskForm({
   /* Prefilled from the first render, so an edit never flashes an empty form. */
   const [values, setValues] = useState(() => toFormValues(initialValues))
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     setValues(toFormValues(initialValues))
@@ -65,8 +66,9 @@ export function TaskForm({
     setError('')
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    if (saving) return
 
     if (!values.title.trim()) {
       setError('Please give your task a title.')
@@ -81,14 +83,23 @@ export function TaskForm({
       return
     }
 
-    onSubmit({
-      title: values.title.trim(),
-      courseId: Number(values.courseId),
-      dueDate: values.dueDate,
-      priority: values.priority,
-      status: showStatus ? values.status : initialValues.status ?? 'todo',
-      description: values.description.trim(),
-    })
+    /* onSubmit may talk to the API, so wait for it. A rejection keeps the
+       dialog open with the reason on screen rather than closing silently. */
+    try {
+      setSaving(true)
+      await onSubmit({
+        title: values.title.trim(),
+        courseId: Number(values.courseId),
+        dueDate: values.dueDate,
+        priority: values.priority,
+        status: showStatus ? values.status : initialValues.status ?? 'todo',
+        description: values.description.trim(),
+      })
+    } catch (err) {
+      setError(err?.message || 'Something went wrong saving this task.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -182,15 +193,15 @@ export function TaskForm({
 
       <div className={`modal-footer ${onDelete ? 'modal-footer--split' : ''}`}>
         {onDelete && (
-          <Button variant="danger" type="button" onClick={onDelete}>
+          <Button variant="danger" type="button" onClick={onDelete} disabled={saving}>
             Delete task
           </Button>
         )}
         <div className="modal-footer-actions">
-          <Button variant="ghost" type="button" onClick={onCancel}>
+          <Button variant="ghost" type="button" onClick={onCancel} disabled={saving}>
             Cancel
           </Button>
-          <Button type="submit" iconRight={<ArrowUpRight size={16} />}>
+          <Button type="submit" loading={saving} iconRight={<ArrowUpRight size={16} />}>
             {submitLabel}
           </Button>
         </div>
