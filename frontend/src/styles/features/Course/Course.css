@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 0 var(--space-4);
+  padding: 0 0 var(--space-5);
   font-size: var(--text-base);
   color: var(--text-secondary);
 }
@@ -26,8 +26,11 @@
   background: var(--bg-surface-hover);
 }
 
+/* No gutter of its own: the toolbar, the grid and the page title all sit on
+   the same left edge, which PageContainer sets. A rule separates the header. */
 .courses-wrapper {
-  padding: var(--space-4);
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-6);
 }
 
 .courses-grid {
