@@ -5,6 +5,7 @@ import TaskRow from '../components/features/Tasks/TaskRow'
 import TaskCard from '../components/features/Tasks/TaskCard'
 import { EditTaskModal } from '../components/features/Tasks/EditTaskModal'
 import { TaskMessageDialog } from '../components/features/Tasks/TaskMessageDialog'
+import { CreateTaskModal } from '../components/features/Tasks/CreateTaskModal'
 import {
   PRIORITY_OPTIONS,
   STATUS_OPTIONS,
@@ -36,7 +37,7 @@ function Dropdown({ value, onChange, options, allLabel }) {
 }
 
 export default function Tasks() {
-  const { tasks, courses, loading, error, clearError, updateTask, deleteTask, toggleDone, setTaskStatus } =
+  const { tasks, courses, loading, error, clearError, updateTask, deleteTask, toggleDone, setTaskStatus, addTask } =
     useTasks()
 
   const [query, setQuery] = useState('')
@@ -45,9 +46,10 @@ export default function Tasks() {
   const [status, setStatus] = useState('All')
   const [view, setView] = useState('list')
   const [currentPage, setCurrentPage] = useState(1)
-
+  const [showCreateTask, setShowCreateTask] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [taskToDelete, setTaskToDelete] = useState(null)
+
 
   const courseOptions = useMemo(
     () => courses.map((c) => ({ value: String(c.id), label: `${c.code} · ${c.name}` })),
@@ -104,6 +106,18 @@ export default function Tasks() {
     }
   }
 
+  // create task
+  const handleCreateTask = async (values) => {
+    try {
+      await addTask(values)
+
+      setShowCreateTask(false)
+      setCurrentPage(1)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   return (
     <PageContainer className="tasks-page">
       <PageHeader
@@ -111,7 +125,12 @@ export default function Tasks() {
         title="Big plans. Small steps."
         subtitle="Everything you're working toward, all in one place."
         actions={
-          <Button iconLeft={<Plus size={16} />}>New task</Button>
+          <Button
+            iconLeft={<Plus size={16} />}
+            onClick={() => setShowCreateTask(true)}
+          >
+            New task
+          </Button>
         }
       />
 
@@ -273,6 +292,13 @@ export default function Tasks() {
           </>
         )}
       </div>
+
+      <CreateTaskModal
+        open={showCreateTask}
+        onClose={() => setShowCreateTask(false)}
+        courses={courses}
+        onCreate={handleCreateTask}
+      />
 
       <EditTaskModal
         open={Boolean(editingTask)}
