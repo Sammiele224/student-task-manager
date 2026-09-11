@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "../styles/overview.css";
 
 const stats = {
@@ -68,28 +68,27 @@ const overdueTasks = [
   },
 ];
 
-const courses = [
-  {
-    id: 1,
-    name: "Web Engineering",
-    code: "IT3080",
-    color: "#3B82F6",
-  },
-  {
-    id: 2,
-    name: "Database Systems",
-    code: "IT3020",
-    color: "#10B981",
-  },
-  {
-    id: 3,
-    name: "Software Engineering",
-    code: "IT3040",
-    color: "#8B5CF6",
-  },
-];
+// -----------------------------------------------------------------------
+// FIXED: removed the hardcoded courses array, now fetches real data
+// from /api/v1/courses (Day 4 task — Trân + Nhân)
+// -----------------------------------------------------------------------
 
 function Overview() {
+  const [courses, setCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+  const [coursesError, setCoursesError] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/v1/courses")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load courses");
+        return res.json();
+      })
+      .then((json) => setCourses(json.data)) // backend wraps response as { success, data }
+      .catch((err) => setCoursesError(err.message))
+      .finally(() => setCoursesLoading(false));
+  }, []);
+
   return (
     <main className="dashboard">
       <div className="dashboard-container">
@@ -250,23 +249,34 @@ function Overview() {
             </div>
 
             <div className="course-list">
-              {courses.map((course) => (
-                <div className="course-item" key={course.id}>
-                  <span
-                    className="course-dot"
-                    style={{
-                      backgroundColor: course.color,
-                    }}
-                  />
+              {coursesLoading && <p>Loading courses...</p>}
 
-                  <div>
-                    <h3>{course.name}</h3>
-                    <p>{course.code}</p>
+              {coursesError && (
+                <p style={{ color: "red" }}>{coursesError}</p>
+              )}
+
+              {!coursesLoading && !coursesError && courses.length === 0 && (
+                <p>No courses yet.</p>
+              )}
+
+              {!coursesLoading && !coursesError &&
+                courses.map((course) => (
+                  <div className="course-item" key={course.id}>
+                    <span
+                      className="course-dot"
+                      style={{
+                        backgroundColor: course.color,
+                      }}
+                    />
+
+                    <div>
+                      <h3>{course.name}</h3>
+                      <p>{course.code}</p>
+                    </div>
+
+                    <span className="course-arrow">→</span>
                   </div>
-
-                  <span className="course-arrow">→</span>
-                </div>
-              ))}
+                ))}
             </div>
           </section>
 
