@@ -1,0 +1,395 @@
+/* ==========================================================================
+   Calendar — the month grid and the daily view beside it.
+   ========================================================================== */
+
+.calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 268px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/* --------------------------------------------------------------------------
+   Month card
+   -------------------------------------------------------------------------- */
+.calendar-month {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.calendar-month-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--space-6) var(--space-5);
+}
+
+.calendar-month-title {
+  font-size: var(--text-2xl);
+  color: var(--ink);
+  margin: 0;
+}
+
+.calendar-month-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* weekday header */
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.calendar-weekdays {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--input);
+}
+
+.calendar-weekdays span {
+  padding: var(--space-2) var(--space-3);
+  text-align: center;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* --------------------------------------------------------------------------
+   Day squares
+   -------------------------------------------------------------------------- */
+.calendar-day {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-height: 108px;
+  padding: var(--space-3);
+  /* One shared hairline: each square draws its right and bottom edge, and the
+     card's overflow clips the outermost ones. */
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease);
+}
+
+.calendar-day:hover {
+  background: var(--input);
+}
+
+.calendar-day:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  position: relative;
+  z-index: 1;
+}
+
+/* Selection and focus both draw a ring, and a box-shadow has only one slot,
+   so a focused day that is also selected has to state both. */
+.calendar-day.is-selected:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--green), var(--focus-ring);
+}
+
+/* Days either side of the month stay readable but recede. */
+.calendar-day.is-outside {
+  background: var(--input);
+}
+
+.calendar-day.is-outside .calendar-day-number {
+  color: var(--faint);
+}
+
+.calendar-day.is-selected {
+  background: var(--green-soft);
+  box-shadow: inset 0 0 0 2px var(--green);
+  position: relative;
+  z-index: 1;
+}
+
+.calendar-day-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-base);
+  color: var(--subtle);
+}
+
+/* Today keeps its marker whatever day is selected. */
+.calendar-day-number.is-today {
+  background: var(--green);
+  color: var(--on-primary);
+  font-weight: 600;
+}
+
+.calendar-day-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.calendar-chip {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 2px var(--space-2);
+  border-left: 2px solid var(--course-color, var(--green));
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: color-mix(in srgb, var(--course-color, var(--green)) 14%, var(--surface));
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.calendar-chip.is-done {
+  color: var(--faint);
+  text-decoration: line-through;
+}
+
+.calendar-day-more {
+  padding-left: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/* Chips are unreadable at phone width; a dot per assignment reads better. */
+.calendar-day-dots {
+  display: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+}
+
+.calendar-day-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--course-color, var(--green));
+}
+
+/* --------------------------------------------------------------------------
+   Legend
+   -------------------------------------------------------------------------- */
+.calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-4) var(--space-6);
+}
+
+.calendar-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--subtle);
+}
+
+.calendar-legend-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--course-color, var(--green));
+}
+
+/* --------------------------------------------------------------------------
+   Daily view
+   -------------------------------------------------------------------------- */
+.calendar-day-panel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+}
+
+.calendar-panel-weekday {
+  font-size: var(--text-2xl);
+  color: var(--green);
+  margin: var(--space-4) 0 0;
+}
+
+.calendar-panel-date {
+  font-size: var(--text-lg);
+  color: var(--subtle);
+  margin: var(--space-1) 0 0;
+}
+
+.calendar-panel-count {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin: var(--space-4) 0 0;
+}
+
+/* The rule under the list separates the day's work from the add action.
+   An empty day has no list, and needs no rule. */
+.calendar-panel-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: var(--space-5) 0 var(--space-6);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--line);
+}
+
+.calendar-panel-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.calendar-panel-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  padding: var(--space-2) 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--input);
+  line-height: 1.1;
+}
+
+.calendar-panel-tile-month {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  color: var(--muted);
+}
+
+.calendar-panel-tile-day {
+  font-size: var(--text-md);
+  color: var(--ink);
+}
+
+.calendar-panel-item-text {
+  min-width: 0;
+}
+
+.calendar-panel-item-title {
+  display: inline-block;
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--ink);
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.calendar-panel-item-title:hover {
+  color: var(--green);
+}
+
+.calendar-panel-item-title.is-done {
+  color: var(--faint);
+  text-decoration: line-through;
+}
+
+.calendar-panel-item-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin: 2px 0 0;
+}
+
+.calendar-panel-item-meta .is-overdue {
+  color: var(--danger);
+}
+
+.calendar-panel-item-dot {
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: var(--course-color, var(--green));
+}
+
+/* empty day */
+.calendar-panel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-10) 0 var(--space-8);
+}
+
+.calendar-panel-empty svg {
+  width: 26px;
+  height: 26px;
+  color: var(--muted);
+  margin-bottom: var(--space-5);
+}
+
+.calendar-panel-empty-title {
+  font-size: var(--text-lg);
+  color: var(--ink);
+  margin: 0;
+}
+
+.calendar-panel-empty-text {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin: var(--space-2) 0 var(--space-6);
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 1080px) {
+  .calendar-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .calendar-day {
+    min-height: 64px;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-1);
+  }
+
+  .calendar-day-number {
+    align-self: center;
+  }
+
+  .calendar-day-chips {
+    display: none;
+  }
+
+  .calendar-day-dots {
+    display: flex;
+  }
+
+  .calendar-month-head {
+    padding: var(--space-5) var(--space-4) var(--space-4);
+  }
+
+  .calendar-legend {
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-4);
+  }
+}
