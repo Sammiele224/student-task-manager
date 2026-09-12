@@ -97,3 +97,36 @@ export function isOnHorizon(task) {
   const due = atMidnight(task.dueDate)
   return due >= startOfToday() && due <= endOfHorizon()
 }
+
+/**
+ * Per-course progress for the course cards: how many of a course's tasks are
+ * finished, how many are still open, and how many there are in all.
+ *
+ * Keyed by course id. A course with no tasks is absent, so callers fall back
+ * to whatever count the course record itself carries.
+ */
+export function getCourseProgress(tasks) {
+  const byCourse = new Map()
+
+  for (const task of tasks) {
+    if (task.courseId == null) continue
+    const entry = byCourse.get(task.courseId) ?? { done: 0, active: 0, total: 0 }
+    entry.total += 1
+    if (task.status === 'done') entry.done += 1
+    else entry.active += 1
+    byCourse.set(task.courseId, entry)
+  }
+
+  return byCourse
+}
+
+/**
+ * The short list the dashboard puts in front of a student: unfinished work by
+ * due date, so anything late sits at the top where it belongs.
+ */
+export function getFocusTasks(tasks, limit = 4) {
+  return tasks
+    .filter((t) => t.status !== 'done' && t.dueDate)
+    .sort((a, b) => atMidnight(a.dueDate) - atMidnight(b.dueDate))
+    .slice(0, limit)
+}

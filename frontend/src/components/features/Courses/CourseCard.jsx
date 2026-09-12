@@ -2,24 +2,28 @@ import { MoreHorizontal, Pencil, Trash2, Code2 } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import { useClickOutside } from '../../../hooks/useClickOutside'
 
-export function CourseCard({ course, onOpen, onEdit, onRemove }) {
+/**
+ * @param {object} progress  real counts for this course, { done, active, total }.
+ *   The course record only carries a task count, so without this the card has
+ *   no way to know how much of that count is finished.
+ */
+export function CourseCard({ course, progress, onOpen, onEdit, onRemove }) {
     const {
-        id,
         name,
         code,
         color,
         taskCount,
-        createdAt,
     } = course
 
     const [showMenu, setShowMenu] = useState(false)
     const closeMenu = useCallback(() => setShowMenu(false), [])
     const menuRef = useClickOutside(closeMenu, showMenu)
 
-    // do not have complete task
-    const done = 0
-    const total = taskCount
-    const activeCount = taskCount
+    /* Fall back to the course's own count when no task list was passed, which
+       reads as a course whose work has not been started. */
+    const done = progress?.done ?? 0
+    const total = progress?.total ?? taskCount ?? 0
+    const activeCount = progress?.active ?? taskCount ?? 0
 
     const percent = total > 0
         ? Math.round((done / total) * 100)

@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { useTasks } from '../components/features/Tasks/TaskContext'
 import { CreateTaskModal } from '../components/features/Tasks/CreateTaskModal'
@@ -26,8 +27,27 @@ export default function Calendar() {
   const { tasks, courses, loading, error, clearError, addTask } = useTasks()
 
   const today = useMemo(() => startOfToday(), [])
-  const [selectedDay, setSelectedDay] = useState(today)
-  const [month, setMonth] = useState(() => startOfMonth(today))
+
+  /* ?date=YYYY-MM-DD opens on that day, which is how the dashboard's week
+     strip links in. Anything unparseable falls back to today. */
+  const [searchParams] = useSearchParams()
+  const requestedDay = useMemo(() => {
+    const raw = searchParams.get('date')
+    if (!raw) return null
+    const parsed = new Date(`${raw}T00:00:00`)
+    return Number.isNaN(parsed.getTime()) ? null : parsed
+  }, [searchParams])
+
+  const [selectedDay, setSelectedDay] = useState(requestedDay ?? today)
+  const [month, setMonth] = useState(() => startOfMonth(requestedDay ?? today))
+
+  /* Arriving at a new ?date while already on this page has to move the grid;
+     the initial state above only runs on mount. */
+  useEffect(() => {
+    if (!requestedDay) return
+    setSelectedDay(requestedDay)
+    setMonth(startOfMonth(requestedDay))
+  }, [requestedDay])
   const [creatingFor, setCreatingFor] = useState(null)
 
   /* The API has no date-range query, so the month is cut from the task list

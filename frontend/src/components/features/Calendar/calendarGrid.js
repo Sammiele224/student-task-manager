@@ -111,12 +111,3 @@ export function dayHeading(date) {
     date: date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }),
   }
 }
-
-/** "SEP" / "8" for the small date tile beside a task in the daily view. */
-export function dayTile(date) {
-  const day = new Date(date)
-  return {
-    month: day.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
-    day: String(day.getDate()),
-  }
-}

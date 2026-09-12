@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '../components/ui'
 import { CourseCard, AddCourseCard } from '../components/features/Courses/CourseCard'
+import { useTasks } from '../components/features/Tasks/TaskContext'
+import { getCourseProgress } from '../components/features/Tasks/taskStats'
 import { CoursesToolbar } from '../components/features/Courses/CourseToolBar'
 import { CreateCourseModal } from '../components/features/Courses/CreateCourseModal'
 import { EditCourseModal } from '../components/features/Courses/EditCourseModal'
@@ -18,6 +20,11 @@ import '../styles/features/Course/Course.css'
 import '../styles/features/Course/CourseForm.css'
 
 export default function Courses() {
+  /* Course records only carry a task count, so the real done/open split comes
+     from the shared task list. */
+  const { tasks } = useTasks()
+  const courseProgress = getCourseProgress(tasks)
+
   const [courses, setCourses] = useState([])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -175,6 +182,7 @@ export default function Courses() {
                 <CourseCard
                   key={course.id}
                   course={course}
+                  progress={courseProgress.get(course.id)}
                   onEdit={() => setEditingCourse(course)}
                   onRemove={() =>
                     setCourseToDelete(course)

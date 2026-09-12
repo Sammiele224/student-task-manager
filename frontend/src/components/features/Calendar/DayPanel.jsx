@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom'
 import { Plus, Sun } from 'lucide-react'
 import { Button } from '../../ui'
-import { formatDue, statusMeta } from '../Tasks/taskMeta'
-import { dayHeading, dayTile } from './calendarGrid'
+import TaskDateItem from '../Tasks/TaskDateItem'
+import { dayHeading } from './calendarGrid'
+
+import '../../../styles/features/Task/TaskDateItem.css'
 
 /**
  * The daily view beside the grid: everything due on the selected day, with a
@@ -30,41 +31,9 @@ export default function DayPanel({ day, tasks, onAdd }) {
         </div>
       ) : (
         <ul className="calendar-panel-list">
-          {tasks.map((task) => {
-            const tile = dayTile(task.dueDate)
-            const done = task.status === 'done'
-            const due = formatDue(task.dueDate, task.status)
-
-            return (
-              <li key={task.id} className="calendar-panel-item">
-                <span className="calendar-panel-tile" aria-hidden="true">
-                  <span className="calendar-panel-tile-month">{tile.month}</span>
-                  <span className="calendar-panel-tile-day">{tile.day}</span>
-                </span>
-
-                <div className="calendar-panel-item-text">
-                  <Link
-                    to={`/tasks/${task.id}`}
-                    className={`calendar-panel-item-title ${done ? 'is-done' : ''}`}
-                  >
-                    {task.title}
-                  </Link>
-                  <p className="calendar-panel-item-meta">
-                    <span
-                      className="calendar-panel-item-dot"
-                      style={{ '--course-color': task.courseColor }}
-                      aria-hidden="true"
-                    />
-                    {task.courseCode}
-                    <span aria-hidden="true"> · </span>
-                    <span className={due.overdue ? 'is-overdue' : ''}>
-                      {done ? statusMeta(task.status).label : due.label}
-                    </span>
-                  </p>
-                </div>
-              </li>
-            )
-          })}
+          {tasks.map((task) => (
+            <TaskDateItem key={task.id} task={task} />
+          ))}
         </ul>
       )}
 
