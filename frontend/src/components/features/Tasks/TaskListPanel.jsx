@@ -2,7 +2,42 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, LayoutGrid, Plus, Rows3, Search } from 'lucide-react'
 import TaskRow from './TaskRow'
 import TaskCard from './TaskCard'
-import { PRIORITY_OPTIONS, STATUS_OPTIONS, statusMeta } from './taskMeta'
+import { PRIORITY_OPTIONS, PRIORITY_VALUES, STATUS_OPTIONS, statusMeta } from './taskMeta'
+
+/* Matches the API's own sort options, so the two agree on what each means.
+   Priority ascending puts high first, the way FIELD(priority,'high',…) does. */
+const SORT_OPTIONS = [
+  { value: 'dueDate-asc', label: 'Due date ↑' },
+  { value: 'dueDate-desc', label: 'Due date ↓' },
+  { value: 'priority-asc', label: 'Priority ↑' },
+  { value: 'priority-desc', label: 'Priority ↓' },
+  { value: 'createdAt-asc', label: 'Created date ↑' },
+  { value: 'createdAt-desc', label: 'Created date ↓' },
+]
+
+const SORT_CAPTIONS = {
+  'dueDate-asc': 'Soonest due first',
+  'dueDate-desc': 'Latest due first',
+  'priority-asc': 'Highest priority first',
+  'priority-desc': 'Lowest priority first',
+  'createdAt-asc': 'Oldest first',
+  'createdAt-desc': 'Newest first',
+}
+
+/* High sorts before medium before low. */
+const PRIORITY_RANK = Object.fromEntries(
+  [...PRIORITY_VALUES].reverse().map((value, index) => [value, index])
+)
+
+function compareBy(field, a, b) {
+  if (field === 'priority') {
+    return (PRIORITY_RANK[a.priority] ?? 99) - (PRIORITY_RANK[b.priority] ?? 99)
+  }
+  /* A missing date sorts last whichever way the list is pointing. */
+  const left = a[field] ? new Date(a[field]).getTime() : Infinity
+  const right = b[field] ? new Date(b[field]).getTime() : Infinity
+  return left - right
+}
 
 /**
  * The task card shared by the All tasks and Upcoming pages: search and filter
@@ -19,11 +54,16 @@ import { PRIORITY_OPTIONS, STATUS_OPTIONS, statusMeta } from './taskMeta'
  * @param {string} emptyText      supporting line under it
  */
 
-function Dropdown({ value, onChange, options, allLabel }) {
+/* `hideAll` is for a control with no neutral choice, such as sort order. */
+function Dropdown({ value, onChange, options, allLabel, hideAll = false }) {
   return (
     <div className="tasks-dropdown">
-      <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={allLabel}>
-        <option value="All">{allLabel}</option>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={allLabel ?? 'Sort order'}
+      >
+        {!hideAll && <option value="All">{allLabel}</option>}
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}
@@ -51,6 +91,7 @@ export default function TaskListPanel({
   const [course, setCourse] = useState('All')
   const [priority, setPriority] = useState('All')
   const [status, setStatus] = useState('All')
+  const [sort, setSort] = useState('dueDate-asc')
   const [view, setView] = useState('list')
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -61,20 +102,23 @@ export default function TaskListPanel({
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
+    const [field, direction] = sort.split('-')
+    const sign = direction === 'desc' ? -1 : 1
+
     return tasks
       .filter((t) => (course === 'All' ? true : String(t.courseId) === course))
       .filter((t) => (priority === 'All' ? true : t.priority === priority))
       .filter((t) => (status === 'All' ? true : t.status === status))
       .filter((t) => t.title.toLowerCase().includes(needle))
-      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
-  }, [tasks, course, priority, status, query])
+      .sort((a, b) => sign * compareBy(field, a, b) || a.id - b.id)
+  }, [tasks, course, priority, status, query, sort])
 
   const paginated = Boolean(pageSize)
   const totalPages = paginated ? Math.max(1, Math.ceil(filtered.length / pageSize)) : 1
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [query, course, priority, status, view])
+  }, [query, course, priority, status, sort, view])
 
   /* Filtering can strand the reader past the last page. Clamp rather than
      reset, so deleting a row does not throw them back to page one. */
@@ -104,6 +148,7 @@ export default function TaskListPanel({
         <Dropdown value={course} onChange={setCourse} options={courseOptions} allLabel="All courses" />
         <Dropdown value={priority} onChange={setPriority} options={PRIORITY_OPTIONS} allLabel="All priorities" />
         <Dropdown value={status} onChange={setStatus} options={statusOptions} allLabel="All statuses" />
+        <Dropdown value={sort} onChange={setSort} options={SORT_OPTIONS} hideAll />
 
         <div className="tasks-view-toggle">
           <button
@@ -131,7 +176,7 @@ export default function TaskListPanel({
         <span>
           {filtered.length} {filtered.length === 1 ? 'assignment' : 'assignments'}
         </span>
-        <span>Soonest due first</span>
+        <span>{SORT_CAPTIONS[sort]}</span>
       </div>
 
       {view === 'grid' ? (

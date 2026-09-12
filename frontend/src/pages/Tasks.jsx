@@ -3,19 +3,23 @@ import { Plus } from 'lucide-react'
 import { useTasks } from '../components/features/Tasks/TaskContext'
 import TaskListPanel from '../components/features/Tasks/TaskListPanel'
 import { EditTaskModal } from '../components/features/Tasks/EditTaskModal'
+import { CreateTaskModal } from '../components/features/Tasks/CreateTaskModal'
 import { TaskMessageDialog } from '../components/features/Tasks/TaskMessageDialog'
 import { PageContainer, PageHeader } from '../components/layout'
 import { Button } from '../components/ui'
 
 import '../styles/features/Task/Tasks.css'
+/* CourseForm.css holds the modal shell and base field styles despite its name. */
+import '../styles/features/Course/CourseForm.css'
 import '../styles/features/Task/TaskForm.css'
 
 const TASKS_PER_PAGE = 5
 
 export default function Tasks() {
-  const { tasks, courses, loading, error, clearError, updateTask, deleteTask, toggleDone, setTaskStatus } =
+  const { tasks, courses, loading, error, clearError, addTask, updateTask, deleteTask, toggleDone, setTaskStatus } =
     useTasks()
 
+  const [creating, setCreating] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [taskToDelete, setTaskToDelete] = useState(null)
 
@@ -52,7 +56,11 @@ export default function Tasks() {
         eyebrow="One step at a time"
         title="Big plans. Small steps."
         subtitle="Everything you're working toward, all in one place."
-        actions={<Button iconLeft={<Plus size={16} />}>New task</Button>}
+        actions={
+          <Button iconLeft={<Plus size={16} />} onClick={() => setCreating(true)}>
+            New task
+          </Button>
+        }
       />
 
       {error && (
@@ -72,6 +80,13 @@ export default function Tasks() {
         onToggleDone={handleToggleDone}
         onStatusChange={handleStatusChange}
         onEdit={setEditingTask}
+      />
+
+      <CreateTaskModal
+        open={creating}
+        courses={courses}
+        onClose={() => setCreating(false)}
+        onCreate={addTask}
       />
 
       <EditTaskModal
