@@ -21,12 +21,39 @@ async function readResponse(response, fallbackMessage) {
 /**
  * @param {object} params  optional search, courseId, status, priority, sort, order
  */
-export async function getTasks(params = {}) {
-  const query = new URLSearchParams(
-    Object.entries(params).filter(([, value]) => value !== undefined && value !== '')
-  ).toString()
+export async function getTasks(filters = {}) {
+  const params = new URLSearchParams()
 
-  const response = await fetch(query ? `${API_URL}?${query}` : API_URL)
+  if (filters.search) {
+    params.append('search', filters.search)
+  }
+
+  if (filters.courseId) {
+    params.append('courseId', filters.courseId)
+  }
+
+  if (filters.status) {
+    params.append('status', filters.status)
+  }
+
+  if (filters.priority) {
+    params.append('priority', filters.priority)
+  }
+
+  if (filters.sort) {
+    params.append('sort', filters.sort)
+  }
+
+  if (filters.order) {
+    params.append('order', filters.order)
+  }
+
+  const queryString = params.toString()
+
+  const response = await fetch(
+    queryString ? `${API_URL}?${queryString}` : API_URL
+  )
+
   return readResponse(response, 'Failed to fetch tasks')
 }
 

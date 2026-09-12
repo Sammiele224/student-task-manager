@@ -19,10 +19,19 @@ export function TasksProvider({ children }) {
 
   /** Pulls the list back from the API. Writes call this when the response
       does not carry enough to rebuild the row on its own. */
-  const reload = useCallback(async () => {
-    const [taskList, courseList] = await Promise.all([getTasks(), getCourses()])
-    setTasks(taskList)
-    setCourses(courseList)
+  const fetchTasks = useCallback(async (filters = {}) => {
+    try {
+      setLoading(true)
+      setError('')
+
+      const taskList = await getTasks(filters)
+
+      setTasks(taskList)
+    } catch (err) {
+      setError(err.message || 'Could not reach the server.')
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -53,12 +62,12 @@ export function TasksProvider({ children }) {
      just a message, so there is nothing to merge. Reload rather than guess. */
   async function addTask(values) {
     await createTaskRequest(values)
-    await reload()
+    await fetchTasks()
   }
 
   async function updateTask(id, values) {
     await updateTaskRequest(id, values)
-    await reload()
+    await fetchTasks()
   }
 
   /**
@@ -110,7 +119,7 @@ export function TasksProvider({ children }) {
     courses,
     loading,
     error,
-    reload,
+    fetchTasks, // search, filter, sort
     clearError: () => setError(''),
     addTask,
     updateTask,
@@ -118,13 +127,17 @@ export function TasksProvider({ children }) {
     toggleDone,
     setTaskStatus,
     getTaskById,
-    completedCount,
+    completedCount, // statistics
     overdueCount,
     totalCount: tasks.length,
     percentDone,
   }
 
-  return <TasksContext.Provider value={value}>{children}</TasksContext.Provider>
+  return (
+    <TasksContext.Provider value={value}>
+      {children}
+    </TasksContext.Provider>
+  )
 }
 
 export function useTasks() {
