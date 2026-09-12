@@ -116,12 +116,12 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'courseId, title, and dueDate are required.' })
     }
 
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
-    if (dueDate < today) {
-        return res.status(400).json({ success: false, message: 'Due date cannot be in the past.' }) 
-    }
+    // const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
+    // if (dueDate < today) {
+    //     return res.status(400).json({ success: false, message: 'Due date cannot be in the past.' }) 
+    // }
 
-    // Because of the schema check constraint, if inserting a 'done' task immediately, 
+    // due to schema check constraint, if inserting a 'done' task immediately, 
     // it MUST have a completed_at timestamp.
     const completedAt = status === 'done' ? new Date() : null
 
@@ -158,10 +158,10 @@ router.put('/:id', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'All fields are required for a PUT update.' })
     }
 
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
-    if (dueDate < today) {
-        return res.status(400).json({ success: false, message: 'Due date cannot be in the past.' }) 
-    }
+    // const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
+    // if (dueDate < today) {
+    //     return res.status(400).json({ success: false, message: 'Due date cannot be in the past.' }) 
+    // }
 
     const query = `
       UPDATE tasks 
