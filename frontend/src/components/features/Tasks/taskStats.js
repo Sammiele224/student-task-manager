@@ -78,3 +78,22 @@ export function getOverdueTasks(tasks, limit = 3) {
 export function daysOverdue(task) {
   return Math.round((startOfToday() - atMidnight(task.dueDate)) / 86400000)
 }
+
+/** Midnight seven days from today — the far edge of the "next 7 days" window. */
+function endOfHorizon() {
+  const end = startOfToday()
+  end.setDate(end.getDate() + 7)
+  end.setHours(23, 59, 59, 999)
+  return end
+}
+
+/**
+ * Unfinished work due between today and seven days out.
+ * The Upcoming page counts this for its horizon banner and its "Next 7 days"
+ * tab, so both always agree. Overdue work is excluded: it has its own tab.
+ */
+export function isOnHorizon(task) {
+  if (!task?.dueDate || task.status === 'done') return false
+  const due = atMidnight(task.dueDate)
+  return due >= startOfToday() && due <= endOfHorizon()
+}
