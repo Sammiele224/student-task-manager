@@ -5,6 +5,7 @@ import TaskRow from '../components/features/Tasks/TaskRow'
 import TaskCard from '../components/features/Tasks/TaskCard'
 import { EditTaskModal } from '../components/features/Tasks/EditTaskModal'
 import { TaskMessageDialog } from '../components/features/Tasks/TaskMessageDialog'
+import { CreateTaskModal } from '../components/features/Tasks/CreateTaskModal'
 import {
   PRIORITY_OPTIONS,
   STATUS_OPTIONS,
@@ -36,8 +37,19 @@ function Dropdown({ value, onChange, options, allLabel }) {
 }
 
 export default function Tasks() {
-  const { tasks, courses, loading, error, clearError, updateTask, deleteTask, toggleDone, setTaskStatus } =
-    useTasks()
+  const {
+    tasks,
+    courses,
+    loading,
+    error,
+    clearError,
+    fetchTasks,
+    updateTask,
+    deleteTask,
+    toggleDone,
+    setTaskStatus,
+    addTask,
+  } = useTasks()
 
   const [query, setQuery] = useState('')
   const [course, setCourse] = useState('All')
@@ -45,30 +57,34 @@ export default function Tasks() {
   const [status, setStatus] = useState('All')
   const [view, setView] = useState('list')
   const [currentPage, setCurrentPage] = useState(1)
-
+  const [showCreateTask, setShowCreateTask] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [taskToDelete, setTaskToDelete] = useState(null)
+  const [sort, setSort] = useState('dueDate')
+  const [order, setOrder] = useState('asc')
+
 
   const courseOptions = useMemo(
     () => courses.map((c) => ({ value: String(c.id), label: `${c.code} · ${c.name}` })),
     [courses]
   )
 
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase()
-    return tasks
-      .filter((t) => (course === 'All' ? true : String(t.courseId) === course))
-      .filter((t) => (priority === 'All' ? true : t.priority === priority))
-      .filter((t) => (status === 'All' ? true : t.status === status))
-      .filter((t) => t.title.toLowerCase().includes(needle))
-      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
-  }, [tasks, course, priority, status, query])
+  const filtered = tasks
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / TASKS_PER_PAGE))
 
   useEffect(() => {
+    fetchTasks({
+      search: query.trim(),
+      courseId: course !== 'All' ? course : '',
+      priority: priority !== 'All' ? priority : '',
+      status: status !== 'All' ? status : '',
+      sort,
+      order,
+    })
+
     setCurrentPage(1)
-  }, [query, course, priority, status, view])
+  }, [query, course, priority, status, sort, order, fetchTasks])
 
   const paginatedTasks = useMemo(() => {
     const start = (currentPage - 1) * TASKS_PER_PAGE
@@ -104,6 +120,18 @@ export default function Tasks() {
     }
   }
 
+  // create task
+  const handleCreateTask = async (values) => {
+    try {
+      await addTask(values)
+
+      setShowCreateTask(false)
+      setCurrentPage(1)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   return (
     <PageContainer className="tasks-page">
       <PageHeader
@@ -111,7 +139,12 @@ export default function Tasks() {
         title="Big plans. Small steps."
         subtitle="Everything you're working toward, all in one place."
         actions={
-          <Button iconLeft={<Plus size={16} />}>New task</Button>
+          <Button
+            iconLeft={<Plus size={16} />}
+            onClick={() => setShowCreateTask(true)}
+          >
+            New task
+          </Button>
         }
       />
 
@@ -139,6 +172,23 @@ export default function Tasks() {
           <Dropdown value={course} onChange={setCourse} options={courseOptions} allLabel="All courses" />
           <Dropdown value={priority} onChange={setPriority} options={PRIORITY_OPTIONS} allLabel="All priorities" />
           <Dropdown value={status} onChange={setStatus} options={STATUS_OPTIONS} allLabel="All statuses" />
+          <Dropdown
+            value={`${sort}-${order}`}
+            onChange={(value) => {
+              const [newSort, newOrder] = value.split('-')
+              setSort(newSort)
+              setOrder(newOrder)
+            }}
+            options={[
+              { value: 'dueDate-asc', label: 'Due date ↑' },
+              { value: 'dueDate-desc', label: 'Due date ↓' },
+              { value: 'priority-asc', label: 'Priority ↑' },
+              { value: 'priority-desc', label: 'Priority ↓' },
+              { value: 'createdAt-asc', label: 'Created date ↑' },
+              { value: 'createdAt-desc', label: 'Created date ↓' },
+            ]}
+            allLabel="Sort"
+          />
 
           <div className="tasks-view-toggle">
             <button
@@ -273,6 +323,13 @@ export default function Tasks() {
           </>
         )}
       </div>
+
+      <CreateTaskModal
+        open={showCreateTask}
+        onClose={() => setShowCreateTask(false)}
+        courses={courses}
+        onCreate={handleCreateTask}
+      />
 
       <EditTaskModal
         open={Boolean(editingTask)}
