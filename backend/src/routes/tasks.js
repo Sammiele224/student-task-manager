@@ -8,6 +8,13 @@ const formatISO = (dateStr) => {
   return dateStr.replace(' ', 'T') + '+07:00'
 }
 
+const VALID_PRIORITIES = ['low', 'medium', 'high']
+const VALID_STATUSES = ['todo', 'in_progress', 'done']
+
+const isValidPriority = (value) => VALID_PRIORITIES.includes(value)
+const isValidStatus = (value) => VALID_STATUSES.includes(value)
+const isValidDateFormat = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value)
+
 /**
  * GET /api/v1/tasks
  * Supports query params: search, courseId, status, priority, sort, order
@@ -116,6 +123,18 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'courseId, title, and dueDate are required.' })
     }
 
+    if (!isValidDateFormat(dueDate)) {
+      return res.status(400).json({ success: false, message: 'dueDate must use YYYY-MM-DD format.' })
+    }
+
+    if (!isValidPriority(priority)) {
+      return res.status(400).json({ success: false, message: 'Invalid priority value.' })
+    }
+
+    if (!isValidStatus(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status value.' })
+    }
+
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
     if (dueDate < today) {
         return res.status(400).json({ success: false, message: 'Due date cannot be in the past.' }) 
@@ -158,6 +177,18 @@ router.put('/:id', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'All fields are required for a PUT update.' })
     }
 
+    if (!isValidDateFormat(dueDate)) {
+      return res.status(400).json({ success: false, message: 'dueDate must use YYYY-MM-DD format.' })
+    }
+
+    if (!isValidPriority(priority)) {
+      return res.status(400).json({ success: false, message: 'Invalid priority value.' })
+    }
+
+    if (!isValidStatus(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status value.' })
+    }
+
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
     if (dueDate < today) {
         return res.status(400).json({ success: false, message: 'Due date cannot be in the past.' }) 
@@ -166,22 +197,25 @@ router.put('/:id', async (req, res, next) => {
     const query = `
       UPDATE tasks 
       SET course_id = ?, title = ?, description = ?, due_date = ?, priority = ?, status = ?,
-          completed_at = CASE 
-            WHEN ? = 'done' AND status != 'done' THEN CURRENT_TIMESTAMP
-            WHEN ? != 'done' THEN NULL
-            ELSE completed_at 
+          completed_at = CASE
+            WHEN ? = 'done' THEN COALESCE(completed_at, CURRENT_TIMESTAMP)
+            ELSE NULL
           END
       WHERE id = ?
     `
     const [result] = await pool.query(query, [
-      courseId, title.trim(), description?.trim() || null, dueDate, priority, status, 
-      status, status, req.params.id
+      courseId, title.trim(), description?.trim() || null, dueDate, priority, status,
+      status, req.params.id
     ])
 
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Task not found' })
 
     res.json({ success: true, message: 'Task updated successfully' })
   } catch (error) {
+    // Handle invalid courseId (Foreign Key constraint violation)
+    if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+      return res.status(400).json({ success: false, message: 'The provided courseId does not exist.' })
+    }
     next(error)
   }
 })
@@ -193,16 +227,17 @@ router.put('/:id', async (req, res, next) => {
 router.patch('/:id/status', async (req, res, next) => {
   try {
     const { status } = req.body
-    if (!['todo', 'in_progress', 'done'].includes(status)) {
+    if (!isValidStatus(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status value.' })
     }
 
     const query = `
       UPDATE tasks 
       SET status = ?,
-          completed_at = CASE 
-            WHEN ? = 'done' THEN CURRENT_TIMESTAMP
-            ELSE NULL 
+          completed_at = CASE
+            WHEN ? = 'done'
+              THEN COALESCE(completed_at, CURRENT_TIMESTAMP)
+            ELSE NULL
           END
       WHERE id = ?
     `

@@ -70,6 +70,7 @@ router.post('/', async (req, res, next) => {
       success: true,
       data: {
         ...rows[0],
+        taskCount: 0,
         createdAt: formatCreatedAt(rows[0].createdAt)
       }
     })
@@ -111,7 +112,17 @@ router.put('/:id', async (req, res, next) => {
     
     // fetch the updated course to return in the response
     const [rows] = await pool.query(
-      `SELECT id, name, code, color, created_at AS createdAt FROM courses WHERE id = ?`, 
+      `SELECT
+        c.id,
+        c.name,
+        c.code,
+        c.color,
+        c.created_at AS createdAt,
+        COUNT(t.id) AS taskCount
+      FROM courses c
+      LEFT JOIN tasks t ON t.course_id = c.id
+      WHERE c.id = ?
+      GROUP BY c.id`,
       [id]
     )
 
@@ -119,6 +130,7 @@ router.put('/:id', async (req, res, next) => {
       success: true,
       data: {
         ...rows[0],
+        taskCount: Number(rows[0].taskCount),
         createdAt: formatCreatedAt(rows[0].createdAt)
       }
     })
@@ -160,7 +172,7 @@ router.delete('/:id', async (req, res, next) => {
         [req.params.id]
       )
       const count = taskRows[0].count
-      return res.status(400).json({
+      return res.status(409).json({
         success: false,
         message: `Cannot delete course: ${count} task(s) are currently linked to it.`
       })
