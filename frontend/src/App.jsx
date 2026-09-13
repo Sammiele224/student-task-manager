@@ -6,6 +6,8 @@ import Tasks from './pages/Tasks'
 import TaskDetail from './pages/TaskDetail'
 import Upcoming from './pages/Upcoming'
 import Calendar from './pages/Calendar'
+import SignIn from './pages/SignIn'
+import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
 import { TasksProvider } from './components/features/Tasks/TaskContext'
 
@@ -13,6 +15,9 @@ export default function App() {
   return (
     <TasksProvider>
       <Routes>
+        {/* not have sidebar */}
+        <Route path="signin" element={<SignIn />} />
+
         <Route element={<AppLayout />}>
 
           <Route index element={<Overview />} />
@@ -31,6 +36,8 @@ export default function App() {
           <Route path="upcoming" element={<Upcoming />} />
 
           <Route path="calendar" element={<Calendar />} />
+
+          <Route path="profile" element={<Profile />} />
 
           <Route path="*" element={<NotFound />} />
 
