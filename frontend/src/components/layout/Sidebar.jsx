@@ -1,4 +1,5 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { useState, useRef, useEffect } from 'react'
+import { NavLink, useLocation, useNavigate  } from 'react-router-dom'
 import {
   BookOpen,
   CalendarDays,
@@ -6,17 +7,16 @@ import {
   ExternalLink,
   LayoutGrid,
   ListChecks,
+  LogIn,
   Settings,
+  User,
+  Settings as SettingsIcon,
 } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 import Logo from './Logo'
 import { useTasks } from '../features/Tasks/TaskContext'
 import './Sidebar.css'
 
-/**
- * Primary navigation. Add a page by adding one entry here and one <Route>
- * in App.jsx — nothing else needs to change.
- */
 const NAV_ITEMS = [
   { to: '/', label: 'Overview', icon: LayoutGrid, end: true },
   { to: '/courses', label: 'My courses', icon: BookOpen },
@@ -29,6 +29,27 @@ export default function Sidebar({ open = false, onNavigate }) {
   const { pathname } = useLocation()
   const { completedCount, percentDone } = useTasks()
   const onTasksPage = pathname.startsWith('/tasks')
+  const navigate = useNavigate()
+
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false)
+      }
+    }
+    function handleEscape(e) {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [])
 
   return (
     <aside className={`sidebar ${open ? 'is-open' : ''}`}>
@@ -60,14 +81,12 @@ export default function Sidebar({ open = false, onNavigate }) {
               >
                 <Icon size={18} className="sidebar__link-icon" />
                 <span className="sidebar__link-label">{label}</span>
-                {/* Teammates: render live counts or a status dot here. */}
               </NavLink>
             </li>
           ))}
         </ul>
       </nav>
 
-      {/* progress summary for tasks page */}
       <div className="sidebar__slot">
         <div className="sidebar__progress">
           <p className="sidebar__progress-title">A little more, every day</p>
@@ -94,7 +113,7 @@ export default function Sidebar({ open = false, onNavigate }) {
           <ExternalLink size={14} />
         </a>
 
-        <div className="sidebar__user">
+        <div className="sidebar__user" ref={menuRef}>
           <span className="sidebar__avatar" aria-hidden="true">
             AM
           </span>
@@ -102,9 +121,43 @@ export default function Sidebar({ open = false, onNavigate }) {
             <span className="sidebar__user-name">Alex Morgan</span>
             <span className="sidebar__user-sub">Personal workspace</span>
           </div>
-          <button type="button" className="sidebar__settings" aria-label="Settings">
+          <button
+            type="button"
+            className="sidebar__settings"
+            aria-label="Settings"
+            aria-haspopup="true"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
             <Settings size={16} />
           </button>
+
+          {menuOpen && (
+            <ul className="sidebar__user-menu" role="menu">
+              <li role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="sidebar__user-menu-item"
+                  onClick={() => navigate('/signin')}
+                >
+                  <LogIn size={16} />
+                  <span>Sign in</span>
+                </button>
+              </li>
+              <li role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="sidebar__user-menu-item"
+                  onClick={() => navigate('/profile')}
+                >
+                  <User size={16} />
+                  <span>Profile</span>
+                </button>
+              </li>
+            </ul>
+          )}
         </div>
       </div>
     </aside>

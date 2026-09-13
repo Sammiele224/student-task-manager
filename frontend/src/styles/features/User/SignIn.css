@@ -1,0 +1,327 @@
+.signin {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f3ee;
+  padding: var(--space-6);
+  overflow: hidden;
+}
+
+.signin::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-radial-gradient(
+      circle at 15% 20%,
+      transparent 0,
+      transparent 38px,
+      rgba(46, 74, 51, 0.05) 39px,
+      rgba(46, 74, 51, 0.05) 40px
+    ),
+    repeating-radial-gradient(
+      circle at 85% 80%,
+      transparent 0,
+      transparent 46px,
+      rgba(46, 74, 51, 0.05) 47px,
+      rgba(46, 74, 51, 0.05) 48px
+    );
+  pointer-events: none;
+}
+
+/* card */
+.signin__card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 960px;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  background: #ffffff;
+  border: 1px solid #e4e2d9;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 16px 40px rgba(31, 36, 29, 0.14);
+  overflow: hidden;
+}
+
+/* left side */
+.signin__hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #2e4a33;
+  padding: var(--space-12) var(--space-10);
+  overflow: hidden;
+}
+
+.signin__hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(#ffffff 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.signin__hero-content {
+  position: relative;
+}
+
+.signin__hero-brand {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  color: #ffffff;
+  opacity: 0.75;
+  margin-bottom: var(--space-8);
+}
+
+.signin__hero-title {
+  font-size: var(--text-3xl);
+  font-weight: 500;
+  line-height: var(--leading-tight);
+  color: #ffffff;
+  margin: 0 0 var(--space-5);
+}
+
+.signin__hero-quote {
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: #ffffff;
+  opacity: 0.85;
+  max-width: 32ch;
+  margin: 0;
+}
+
+/* right side */
+.signin__panel {
+  padding: var(--space-12);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.signin__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+}
+
+.signin__brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: var(--leading-tight);
+}
+
+.signin__brand-name {
+  font-size: var(--text-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  color: #1f241d;
+}
+
+.signin__brand-sub {
+  font-size: var(--text-sm);
+  color: #8e9488;
+}
+
+.signin__title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1f241d;
+  margin: 0 0 var(--space-3);
+}
+
+.signin__subtitle {
+  font-size: var(--text-md);
+  color: #5f665a;
+  margin: 0 0 var(--space-8);
+}
+
+.signin__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.signin__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.signin__label {
+  font-size: var(--text-md);
+  font-weight: 500;
+  color: #1f241d;
+}
+
+.signin__input {
+  width: 100%;
+  font-size: var(--text-lg);
+  color: #1f241d;
+  background: #f7f6f1;
+  border: 1px solid #e4e2d9;
+  border-radius: var(--radius-md);
+  padding: 14px var(--space-4);
+  transition: border-color var(--duration-fast) var(--ease),
+    box-shadow var(--duration-fast) var(--ease);
+}
+
+.signin__input::placeholder {
+  color: #8e9488;
+}
+
+.signin__input:focus-visible {
+  outline: none;
+  border-color: #2e4a33;
+  box-shadow: 0 0 0 3px rgba(46, 74, 51, 0.18);
+}
+
+.signin__password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.signin__password-wrap .signin__input {
+  padding-right: 48px;
+}
+
+.signin__password-toggle {
+  position: absolute;
+  right: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #8e9488;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.signin__password-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.signin__password-toggle:hover {
+  color: #5f665a;
+}
+
+.signin__password-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(46, 74, 51, 0.18);
+}
+
+.signin__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.signin__checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+  color: #5f665a;
+  cursor: pointer;
+}
+
+.signin__checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: #2e4a33;
+}
+
+.signin__forgot {
+  font-size: var(--text-md);
+  color: #2e4a33;
+  text-decoration: none;
+}
+
+.signin__forgot:hover {
+  text-decoration: underline;
+}
+
+.signin__error {
+  font-size: var(--text-md);
+  color: #b3402c;
+  background: #fbece8;
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin: 0;
+}
+
+.signin__submit {
+  width: 100%;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: #ffffff;
+  background: #2e4a33;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 14px var(--space-5);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease);
+}
+
+.signin__submit:hover:not(:disabled) {
+  background: #243b28;
+}
+
+.signin__submit:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(46, 74, 51, 0.18);
+}
+
+.signin__submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.signin__footer {
+  margin: var(--space-8) 0 0;
+  text-align: center;
+  font-size: var(--text-md);
+  color: #5f665a;
+}
+
+.signin__footer-link {
+  color: #2e4a33;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.signin__footer-link:hover {
+  text-decoration: underline;
+}
+
+/* responsive */
+@media (max-width: 860px) {
+  .signin__card {
+    grid-template-columns: 1fr;
+    max-width: 480px;
+  }
+
+  .signin__hero {
+    display: none;
+  }
+
+  .signin__panel {
+    padding: var(--space-8);
+  }
+
+  .signin__title {
+    font-size: 28px;
+  }
+}
