@@ -58,10 +58,7 @@ export default function TaskRow({ task, onToggleDone, onStatusChange, onEdit }) 
       </div>
 
       <div>
-        <span className={`tasks-priority ${priority.cssClass}`}>
-          <span className={`tasks-priority-dot ${priority.cssClass}`} aria-hidden="true" />
-          {priority.label}
-        </span>
+        <span className={`tasks-priority ${priority.cssClass}`}>{priority.label}</span>
       </div>
 
       <StatusSelect

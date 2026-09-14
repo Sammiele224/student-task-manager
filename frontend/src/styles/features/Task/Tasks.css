@@ -334,12 +334,6 @@
   font-weight: 700;
 }
 
-.tasks-priority-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-}
-
 .tasks-priority.low {
   background: var(--success-bg);
   color: var(--success);
@@ -353,18 +347,6 @@
 .tasks-priority.high {
   background: var(--danger-bg);
   color: var(--danger);
-}
-
-.tasks-priority-dot.low {
-  background: var(--success);
-}
-
-.tasks-priority-dot.medium {
-  background: var(--warning);
-}
-
-.tasks-priority-dot.high {
-  background: var(--danger);
 }
 
 /* status select */
