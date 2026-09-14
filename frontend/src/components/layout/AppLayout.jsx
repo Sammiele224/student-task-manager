@@ -11,14 +11,29 @@ const BREADCRUMBS = {
   '/tasks': 'All tasks',
   '/upcoming': 'Upcoming',
   '/calendar': 'Calendar',
+  '/profile': 'Profile',
 }
 
+/* Where a detail route's parent lives, so its crumb can link back. */
+const DETAIL_PARENTS = [
+  { prefix: '/tasks/', to: '/tasks', parent: 'All tasks', label: 'Assignment' },
+  { prefix: '/courses/', to: '/courses', parent: 'My courses', label: 'Course' },
+]
+
+/**
+ * The breadcrumb trail for a path, root first. Every crumb but the last
+ * carries a `to` — the last one is the page you are already on, so it is
+ * text rather than a link.
+ */
 function breadcrumbFor(pathname) {
-  if (BREADCRUMBS[pathname]) return BREADCRUMBS[pathname]
-  // Detail routes such as /tasks/12 fall back to their parent's label.
-  if (pathname.startsWith('/tasks/')) return 'Assignment'
-  if (pathname.startsWith('/courses/')) return 'Course'
-  return 'Overview'
+  const root = { label: 'My workspace', to: '/' }
+
+  const detail = DETAIL_PARENTS.find((d) => pathname.startsWith(d.prefix))
+  if (detail) {
+    return [root, { label: detail.parent, to: detail.to }, { label: detail.label }]
+  }
+
+  return [root, { label: BREADCRUMBS[pathname] ?? 'Overview' }]
 }
 
 /**
@@ -43,7 +58,7 @@ export default function AppLayout() {
 
       <div className="app-layout__main">
         <Topbar
-          breadcrumb={breadcrumbFor(pathname)}
+          crumbs={breadcrumbFor(pathname)}
           onMenuClick={() => setNavOpen(true)}
         />
         <main className="app-layout__content">

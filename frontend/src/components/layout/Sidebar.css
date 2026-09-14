@@ -12,11 +12,18 @@
 }
 
 /* ---- Brand ---- */
+/* The brand is a link home, so it needs a focus ring of its own. */
 .sidebar__brand {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   color: var(--green);
+  border-radius: var(--radius-md);
+}
+
+.sidebar__brand:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .sidebar__brand-text {
