@@ -1,0 +1,59 @@
+/* Icon action — open a menu, edit a course, move between months, close a
+   dialog. The icon is the whole label, so every one carries an aria-label. */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease),
+    border-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease),
+    box-shadow var(--duration-fast) var(--ease);
+}
+
+.icon-button:not(:disabled):hover {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+/* A green ring, the way every focusable control in the handoff marks focus. */
+.icon-button:focus-visible {
+  outline: none;
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: var(--focus-ring);
+}
+
+.icon-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.icon-button > svg {
+  width: 1em;
+  height: 1em;
+}
+
+/* ---- Sizes ---- */
+.icon-button--sm {
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+}
+
+.icon-button--md {
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+}
+
+.icon-button--lg {
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+}

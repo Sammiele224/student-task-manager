@@ -17,11 +17,13 @@ USE student_task_manager;
 -- -----------------------------------------------------------------------------
 INSERT IGNORE INTO courses (name, code, color, created_at)
 VALUES
-  ('Data Structures and Algorithms', 'CS201', '#4F46E5', '2026-09-01 00:00:00'),
-  ('Database Systems', 'CS202', '#059669', '2026-09-01 00:00:00'),
-  ('Computer Networks', 'CS301', '#DC2626', '2026-09-01 00:00:00'),
-  ('Web Development', 'CS302', '#D97706', '2026-09-01 00:00:00'),
-  ('Discrete Mathematics', 'MA201', '#7C3AED', '2026-09-01 00:00:00');
+  -- color holds a palette name, not a hex value: the column is VARCHAR(20)
+  -- and defaults to 'green'. The frontend maps each name to a design token.
+  ('Data Structures and Algorithms', 'CS201', 'sage', '2026-09-01 00:00:00'),
+  ('Database Systems', 'CS202', 'green', '2026-09-01 00:00:00'),
+  ('Computer Networks', 'CS301', 'teal', '2026-09-01 00:00:00'),
+  ('Web Development', 'CS302', 'blue', '2026-09-01 00:00:00'),
+  ('Discrete Mathematics', 'MA201', 'sage', '2026-09-01 00:00:00');
 
 -- -----------------------------------------------------------------------------
 -- Temporary staging table for task seed data

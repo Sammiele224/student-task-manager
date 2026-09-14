@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { NavLink, useLocation, useNavigate  } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import {
   BookOpen,
   CalendarDays,
@@ -10,7 +10,6 @@ import {
   LogIn,
   Settings,
   User,
-  Settings as SettingsIcon,
 } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 import Logo from './Logo'
@@ -26,9 +25,7 @@ const NAV_ITEMS = [
 ]
 
 export default function Sidebar({ open = false, onNavigate }) {
-  const { pathname } = useLocation()
   const { completedCount, percentDone } = useTasks()
-  const onTasksPage = pathname.startsWith('/tasks')
   const navigate = useNavigate()
 
   const [menuOpen, setMenuOpen] = useState(false)

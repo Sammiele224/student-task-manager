@@ -7,8 +7,8 @@
   gap: var(--space-4);
   height: var(--topbar-height);
   padding: 0 var(--space-8);
-  background: var(--bg-sidebar);
-  border-bottom: 1px solid var(--border);
+  background: var(--sidebar);
+  border-bottom: 1px solid var(--line);
 }
 
 .topbar__menu {
@@ -17,13 +17,13 @@
   background: none;
   border: none;
   border-radius: var(--radius-sm);
-  color: var(--text-secondary);
+  color: var(--subtle);
   cursor: pointer;
 }
 
 .topbar__menu:hover {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
+  background: var(--neutral-bg);
+  color: var(--ink);
 }
 
 .topbar__crumbs {
@@ -31,16 +31,16 @@
   align-items: center;
   gap: var(--space-2);
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 .topbar__crumb--current {
-  color: var(--text-primary);
+  color: var(--ink);
   font-weight: 500;
 }
 
 .topbar__sep {
-  color: var(--border-strong);
+  color: var(--line-strong);
 }
 
 .topbar__right {
@@ -51,12 +51,12 @@
 }
 
 .topbar__search {
-  width: 280px;
+  width: 238px;
 }
 
 .topbar__date {
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--subtle);
   white-space: nowrap;
 }
 
@@ -64,11 +64,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: var(--accent-soft);
-  color: var(--accent-soft-text);
+  background: var(--green-soft);
+  color: var(--green);
   font-size: var(--text-xs);
   font-weight: 600;
   flex-shrink: 0;

@@ -13,7 +13,7 @@
 
 .form-field .optional {
   font-weight: 400;
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 /* Selects and the notes box match the text inputs they sit beside. */
@@ -21,9 +21,9 @@
 .form-field textarea {
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--bg-surface-subtle);
-  color: var(--text-primary);
+  border: 1px solid var(--line);
+  background: var(--input);
+  color: var(--ink);
   font-size: var(--text-base);
   transition: border-color var(--duration-fast) var(--ease),
     box-shadow var(--duration-fast) var(--ease);
@@ -34,28 +34,28 @@
 }
 
 .form-field textarea {
-  min-height: 104px;
+  min-height: 88px;
   resize: vertical;
   line-height: var(--leading-normal);
 }
 
 .form-field textarea::placeholder {
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 .form-field select:focus,
 .form-field textarea:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--green);
   box-shadow: var(--focus-ring);
-  background: var(--bg-surface);
+  background: var(--surface);
 }
 
 /* Validation message, shown just above the footer. */
 .form-error {
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
-  background: var(--danger-soft);
+  background: var(--danger-bg);
   color: var(--danger);
   font-size: var(--text-base);
 }
@@ -75,8 +75,8 @@
 /* Message-only dialogs: delete confirmation, and the no-courses nudge. */
 .task-dialog-body {
   padding: var(--space-5) var(--space-6);
-  border-bottom: 1px solid var(--border);
-  color: var(--text-secondary);
+  border-bottom: 1px solid var(--line);
+  color: var(--subtle);
   line-height: var(--leading-normal);
 }
 

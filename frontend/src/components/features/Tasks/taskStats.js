@@ -78,3 +78,55 @@ export function getOverdueTasks(tasks, limit = 3) {
 export function daysOverdue(task) {
   return Math.round((startOfToday() - atMidnight(task.dueDate)) / 86400000)
 }
+
+/** Midnight seven days from today — the far edge of the "next 7 days" window. */
+function endOfHorizon() {
+  const end = startOfToday()
+  end.setDate(end.getDate() + 7)
+  end.setHours(23, 59, 59, 999)
+  return end
+}
+
+/**
+ * Unfinished work due between today and seven days out.
+ * The Upcoming page counts this for its horizon banner and its "Next 7 days"
+ * tab, so both always agree. Overdue work is excluded: it has its own tab.
+ */
+export function isOnHorizon(task) {
+  if (!task?.dueDate || task.status === 'done') return false
+  const due = atMidnight(task.dueDate)
+  return due >= startOfToday() && due <= endOfHorizon()
+}
+
+/**
+ * Per-course progress for the course cards: how many of a course's tasks are
+ * finished, how many are still open, and how many there are in all.
+ *
+ * Keyed by course id. A course with no tasks is absent, so callers fall back
+ * to whatever count the course record itself carries.
+ */
+export function getCourseProgress(tasks) {
+  const byCourse = new Map()
+
+  for (const task of tasks) {
+    if (task.courseId == null) continue
+    const entry = byCourse.get(task.courseId) ?? { done: 0, active: 0, total: 0 }
+    entry.total += 1
+    if (task.status === 'done') entry.done += 1
+    else entry.active += 1
+    byCourse.set(task.courseId, entry)
+  }
+
+  return byCourse
+}
+
+/**
+ * The short list the dashboard puts in front of a student: unfinished work by
+ * due date, so anything late sits at the top where it belongs.
+ */
+export function getFocusTasks(tasks, limit = 4) {
+  return tasks
+    .filter((t) => t.status !== 'done' && t.dueDate)
+    .sort((a, b) => atMidnight(a.dueDate) - atMidnight(b.dueDate))
+    .slice(0, limit)
+}

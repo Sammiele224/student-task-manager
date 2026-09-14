@@ -3,7 +3,7 @@ import './Badge.css'
 /**
  * Small status pill used for priority, task status and course codes.
  *
- * @param {'neutral'|'accent'|'high'|'medium'|'low'|'overdue'|'done'} tone
+ * @param {'neutral'|'green'|'high'|'medium'|'low'|'overdue'|'done'} tone
  * @param {boolean} dot  render a leading colour dot
  */
 export default function Badge({
@@ -29,7 +29,7 @@ export default function Badge({
         return 'done'
       case 'in_progress':
       case 'in progress':
-        return 'accent'
+        return 'green'
       case 'todo':
       case 'to do':
         return 'neutral'

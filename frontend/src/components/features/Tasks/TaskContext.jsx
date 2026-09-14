@@ -7,7 +7,20 @@ import {
   updateTaskStatus,
 } from '../../../api/TaskApi'
 import { getCourses } from '../../../api/CourseApi'
+import { courseColorValue } from '../Courses/courseColors'
 import { applyStatus, isTaskOverdue, nextToggledStatus } from './taskMeta'
+
+/**
+ * A task carries its course's stored colour name. Resolving it here means the
+ * rows, cards, chips and dots downstream can drop it straight into
+ * `--course-color` without each knowing about the palette.
+ *
+ * Courses themselves are left alone: CourseCard resolves its own, and
+ * resolving twice would lose the name.
+ */
+function withCourseColor(tasks) {
+  return tasks.map((task) => ({ ...task, courseColor: courseColorValue(task.courseColor) }))
+}
 
 const TasksContext = createContext(null)
 
@@ -26,7 +39,7 @@ export function TasksProvider({ children }) {
 
       const taskList = await getTasks(filters)
 
-      setTasks(taskList)
+      setTasks(withCourseColor(taskList))
     } catch (err) {
       setError(err.message || 'Could not reach the server.')
     } finally {
@@ -43,7 +56,7 @@ export function TasksProvider({ children }) {
         setError('')
         const [taskList, courseList] = await Promise.all([getTasks(), getCourses()])
         if (cancelled) return
-        setTasks(taskList)
+        setTasks(withCourseColor(taskList))
         setCourses(courseList)
       } catch (err) {
         if (!cancelled) setError(err.message || 'Could not reach the server.')

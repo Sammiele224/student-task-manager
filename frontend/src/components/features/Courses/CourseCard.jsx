@@ -1,25 +1,33 @@
 import { MoreHorizontal, Pencil, Trash2, Code2 } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import { useClickOutside } from '../../../hooks/useClickOutside'
+import { courseColorValue } from './courseColors'
 
-export function CourseCard({ course, onOpen, onEdit, onRemove }) {
+/**
+ * @param {object} progress  real counts for this course, { done, active, total }.
+ *   The course record only carries a task count, so without this the card has
+ *   no way to know how much of that count is finished.
+ */
+export function CourseCard({ course, progress, onOpen, onEdit, onRemove }) {
     const {
-        id,
         name,
         code,
-        color,
+        color: storedColor,
         taskCount,
-        createdAt,
     } = course
+
+    /* The row stores a colour name; the design system owns the value. */
+    const color = courseColorValue(storedColor)
 
     const [showMenu, setShowMenu] = useState(false)
     const closeMenu = useCallback(() => setShowMenu(false), [])
     const menuRef = useClickOutside(closeMenu, showMenu)
 
-    // do not have complete task
-    const done = 0
-    const total = taskCount
-    const activeCount = taskCount
+    /* Fall back to the course's own count when no task list was passed, which
+       reads as a course whose work has not been started. */
+    const done = progress?.done ?? 0
+    const total = progress?.total ?? taskCount ?? 0
+    const activeCount = progress?.active ?? taskCount ?? 0
 
     const percent = total > 0
         ? Math.round((done / total) * 100)
@@ -38,18 +46,9 @@ export function CourseCard({ course, onOpen, onEdit, onRemove }) {
     }
 
     return (
-        <div className="course-card" onClick={onOpen}>
+        <div className="course-card" onClick={onOpen} style={{ '--course-color': color }}>
             {/* cover */}
-            <div
-                className="course-card__cover"
-                style={{
-                    background: `linear-gradient(
-            135deg,
-            ${color}33 0%,
-            ${color}66 100%
-          )`,
-                }}
-            >
+            <div className="course-card__cover">
                 <div
                     className="course-card__cover-icon"
                     style={{ color }}

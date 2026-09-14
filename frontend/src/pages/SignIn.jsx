@@ -92,6 +92,23 @@ export default function SignIn() {
               </div>
             </label>
 
+            {/* Stub until the backend team lands auth: the checkbox holds its
+                state but nothing reads it, and the link has nowhere to go. */}
+            <div className="signin__row">
+              <label className="signin__checkbox">
+                <input
+                  type="checkbox"
+                  name="remember"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                />
+                <span>Remember me</span>
+              </label>
+              <Link to="/signin" className="signin__forgot">
+                Forgot password?
+              </Link>
+            </div>
+
             {error && (
               <p className="signin__error" role="alert">
                 {error}
@@ -102,6 +119,13 @@ export default function SignIn() {
               {submitting ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
+
+          <p className="signin__footer">
+            New here?{' '}
+            <Link to="/signin" className="signin__footer-link">
+              Create an account
+            </Link>
+          </p>
         </div>
       </div>
     </div>

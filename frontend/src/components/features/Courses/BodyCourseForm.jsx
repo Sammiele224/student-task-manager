@@ -1,18 +1,16 @@
 import { useState, useEffect } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { Button } from '../../ui'
-
-const COLOR_OPTIONS = [
-  { key: 'green', label: 'Green', color: '#7BAE7F' },
-  { key: 'blue', label: 'Blue', color: '#5B8DEF' },
-  { key: 'sage', label: 'Sage', color: '#A8BFA3' },
-  { key: 'purple', label: 'Purple', color: '#9B7EDE' },
-]
+import {
+  COURSE_COLOR_OPTIONS,
+  DEFAULT_COURSE_COLOR,
+  courseColorValue,
+} from './courseColors'
 
 const EMPTY_VALUES = {
   name: '',
   code: '',
-  color: '#7BAE7F',
+  color: DEFAULT_COURSE_COLOR,
 }
 // body form for creat and edit
 export function CourseForm({ initialValues = EMPTY_VALUES, submitLabel = 'Create course', onCancel, onSubmit }) {
@@ -64,17 +62,17 @@ export function CourseForm({ initialValues = EMPTY_VALUES, submitLabel = 'Create
       <div className="form-field">
         <label>Course color</label>
         <div className="color-swatch-row" role="radiogroup" aria-label="Course color">
-          {COLOR_OPTIONS.map((opt) => (
+          {COURSE_COLOR_OPTIONS.map((opt) => (
             <button
-              key={opt.key}
+              key={opt.value}
               type="button"
               role="radio"
-              aria-checked={color === opt.color}
+              aria-checked={color === opt.value}
               aria-label={opt.label}
-              className={`color-swatch ${color === opt.color ? 'color-swatch--selected' : ''
+              className={`color-swatch ${color === opt.value ? 'color-swatch--selected' : ''
                 }`}
-              style={{ '--swatch-color': opt.color }}
-              onClick={() => setColor(opt.color)}
+              style={{ '--swatch-color': courseColorValue(opt.value) }}
+              onClick={() => setColor(opt.value)}
             />
           ))}
         </div>
