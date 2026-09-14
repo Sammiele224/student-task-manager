@@ -7,25 +7,6 @@
   color: var(--subtle);
 }
 
-.courses-toolbar__semester {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--line);
-  background: var(--surface);
-  font-size: var(--text-sm);
-  color: var(--ink);
-  cursor: pointer;
-  transition: border-color var(--duration-fast) var(--ease),
-    background-color var(--duration-fast) var(--ease);
-}
-.courses-toolbar__semester:hover {
-  border-color: var(--line-strong);
-  background: var(--neutral-bg);
-}
-
 /* Only a card that actually opens a course looks and behaves clickable. */
 .course-card.is-openable {
   cursor: pointer;

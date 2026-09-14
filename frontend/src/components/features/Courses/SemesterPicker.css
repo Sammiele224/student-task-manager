@@ -1,0 +1,179 @@
+/* Semester picker: a year stepper over three terms, the way a date field
+   steps a month over its days. Used by the courses toolbar and the dashboard
+   header, so it owns its own trigger styling. */
+
+.semester-picker {
+  position: relative;
+}
+
+.semester-picker__trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease),
+    background-color var(--duration-fast) var(--ease);
+}
+
+.semester-picker__trigger svg {
+  color: var(--green);
+}
+
+.semester-picker__trigger:hover {
+  border-color: var(--line-strong);
+  background: var(--neutral-bg);
+}
+
+.semester-picker__trigger:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.semester-picker__panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 25;
+  width: 232px;
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+/* --- year stepper --------------------------------------------------------- */
+
+.semester-picker__year {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.semester-picker__year button {
+  display: flex;
+  padding: var(--space-1);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.semester-picker__year button:hover {
+  background: var(--neutral-bg);
+  color: var(--ink);
+}
+
+.semester-picker__year button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.semester-picker__year-value {
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- terms ---------------------------------------------------------------- */
+
+.semester-picker__terms {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.semester-picker__term {
+  position: relative;
+  padding: var(--space-3) var(--space-1);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--input);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--subtle);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease);
+}
+
+.semester-picker__term:hover {
+  background: var(--neutral-bg);
+  color: var(--ink);
+}
+
+.semester-picker__term:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* The term happening now is outlined; the one picked is filled. */
+.semester-picker__term.is-now {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.semester-picker__term.is-selected,
+.semester-picker__term.is-selected:hover {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--on-primary);
+}
+
+.semester-picker__dot {
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.semester-picker__term.is-selected .semester-picker__dot {
+  background: var(--on-primary);
+}
+
+/* --- all ------------------------------------------------------------------ */
+
+.semester-picker__all {
+  width: 100%;
+  padding: var(--space-2);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--subtle);
+  cursor: pointer;
+}
+
+.semester-picker__all:hover {
+  background: var(--neutral-bg);
+  color: var(--ink);
+}
+
+.semester-picker__all:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.semester-picker__all.is-selected {
+  background: var(--green-soft);
+  color: var(--green);
+  font-weight: 600;
+}

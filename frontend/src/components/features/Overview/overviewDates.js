@@ -1,6 +1,7 @@
 /**
- * Dates the dashboard needs: the greeting line, the semester label and the
- * Monday-to-Sunday strip in the week panel.
+ * Dates the dashboard needs: the greeting line and the Monday-to-Sunday strip
+ * in the week panel. The semester split lives in courseSemester.js, so the
+ * dashboard and the courses filter read the same definition.
  */
 
 const WEEKDAY_INITIALS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -12,17 +13,6 @@ export function greetingDate(date = new Date()) {
     month: 'long',
     day: 'numeric',
   })
-}
-
-/**
- * "Fall Semester 2026".
- * Teaching terms, not seasons: September through December is the autumn term,
- * January through May the spring one, and the months between are the break.
- */
-export function semesterLabel(date = new Date()) {
-  const month = date.getMonth()
-  const term = month >= 8 ? 'Fall' : month <= 4 ? 'Spring' : 'Summer'
-  return `${term} Semester ${date.getFullYear()}`
 }
 
 /**

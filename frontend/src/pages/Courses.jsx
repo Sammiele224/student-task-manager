@@ -6,6 +6,10 @@ import { CourseCard, AddCourseCard } from '../components/features/Courses/Course
 import { useTasks } from '../components/features/Tasks/TaskContext'
 import { getCourseProgress } from '../components/features/Tasks/taskStats'
 import { CoursesToolbar } from '../components/features/Courses/CourseToolBar'
+import {
+  ALL_SEMESTERS,
+  filterBySemester,
+} from '../components/features/Courses/courseSemester'
 import { CreateCourseModal } from '../components/features/Courses/CreateCourseModal'
 import { EditCourseModal } from '../components/features/Courses/EditCourseModal'
 import DeleteConfirmDialog from '../components/ui/DeleteConfirmDialog'
@@ -34,6 +38,7 @@ export default function Courses() {
   const [error, setError] = useState('')
   const [editingCourse, setEditingCourse] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [semester, setSemester] = useState(ALL_SEMESTERS)
 
   const COURSES_PER_PAGE = 5
 
@@ -131,16 +136,19 @@ export default function Courses() {
     })
   }
 
+  /* The semester a course belongs to is read off its created_at. */
+  const visibleCourses = filterBySemester(courses, semester)
+
   // page total
   const totalPages = Math.ceil(
-    courses.length / COURSES_PER_PAGE
+    visibleCourses.length / COURSES_PER_PAGE
   )
 
   // get current courses for the current page
   const startIndex =
     (currentPage - 1) * COURSES_PER_PAGE
 
-  const currentCourses = courses.slice(
+  const currentCourses = visibleCourses.slice(
     startIndex,
     startIndex + COURSES_PER_PAGE
   )
@@ -163,8 +171,14 @@ export default function Courses() {
 
       <div className="courses-wrapper">
         <CoursesToolbar
-          count={courses.length}
-          semester="Fall Semester 2026"
+          count={visibleCourses.length}
+          courses={courses}
+          value={semester}
+          onChange={(key) => {
+            setSemester(key)
+            /* A narrower list can strand the reader past the last page. */
+            setCurrentPage(1)
+          }}
         />
 
         {error && (
