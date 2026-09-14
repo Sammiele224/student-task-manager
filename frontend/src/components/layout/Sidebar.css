@@ -50,11 +50,33 @@
   color: var(--subtle);
 }
 
+.sidebar__workspace-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The dot carries the state: green when the API answers, red when it does
+   not, muted while the first check is still out. */
 .sidebar__workspace-dot {
+  flex-shrink: 0;
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--course-data);
+  background: var(--faint);
+  transition: background var(--duration) var(--ease);
+}
+
+.sidebar__workspace.is-online .sidebar__workspace-dot {
+  background: var(--success);
+}
+
+.sidebar__workspace.is-offline .sidebar__workspace-dot {
+  background: var(--danger);
+}
+
+.sidebar__workspace.is-offline {
+  color: var(--danger);
 }
 
 /* ---- Navigation ---- */
@@ -120,10 +142,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
   padding: var(--space-2);
+  border: none;
+  background: transparent;
+  font-family: var(--font-sans);
   font-size: var(--text-sm);
   color: var(--subtle);
+  text-align: left;
   border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.sidebar__aux:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .sidebar__aux:hover {

@@ -13,8 +13,17 @@ import {
 } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 import Logo from './Logo'
+import GuidancePanel from './GuidancePanel'
 import { useTasks } from '../features/Tasks/TaskContext'
+import { useBackendStatus } from '../../hooks/useBackendStatus'
 import './Sidebar.css'
+
+/* What the workspace line says about the server behind it. */
+const STATUS_TEXT = {
+  checking: 'Checking your campus…',
+  online: 'Your personal campus',
+  offline: 'Campus offline — changes will not save',
+}
 
 const NAV_ITEMS = [
   { to: '/', label: 'Overview', icon: LayoutGrid, end: true },
@@ -29,7 +38,9 @@ export default function Sidebar({ open = false, onNavigate }) {
   const navigate = useNavigate()
 
   const [menuOpen, setMenuOpen] = useState(false)
+  const [guidanceOpen, setGuidanceOpen] = useState(false)
   const menuRef = useRef(null)
+  const backend = useBackendStatus()
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -58,9 +69,11 @@ export default function Sidebar({ open = false, onNavigate }) {
         </div>
       </div>
 
-      <div className="sidebar__workspace">
+      {/* The dot was decoration; it now reports whether the API is answering,
+          which is the first thing to check when nothing saves. */}
+      <div className={`sidebar__workspace is-${backend}`} title={STATUS_TEXT[backend]}>
         <span className="sidebar__workspace-dot" aria-hidden="true" />
-        Your personal campus
+        <span className="sidebar__workspace-text">{STATUS_TEXT[backend]}</span>
       </div>
 
       <nav className="sidebar__nav" aria-label="Main">
@@ -105,10 +118,10 @@ export default function Sidebar({ open = false, onNavigate }) {
         <span className="u-eyebrow sidebar__nav-label">Make it yours</span>
         <ThemeToggle />
 
-        <a className="sidebar__aux" href="#guidance">
+        <button type="button" className="sidebar__aux" onClick={() => setGuidanceOpen(true)}>
           <span>A little guidance</span>
-          <ExternalLink size={14} />
-        </a>
+          <ExternalLink size={14} aria-hidden="true" />
+        </button>
 
         <div className="sidebar__user" ref={menuRef}>
           <span className="sidebar__avatar" aria-hidden="true">
@@ -157,6 +170,7 @@ export default function Sidebar({ open = false, onNavigate }) {
           )}
         </div>
       </div>
+      <GuidancePanel open={guidanceOpen} onClose={() => setGuidanceOpen(false)} />
     </aside>
   )
 }

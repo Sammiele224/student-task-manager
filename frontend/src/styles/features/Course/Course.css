@@ -26,6 +26,62 @@
   background: var(--neutral-bg);
 }
 
+.courses-toolbar__semester:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.courses-toolbar__semester-wrap {
+  position: relative;
+}
+
+.courses-toolbar__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 200px;
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.courses-toolbar__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.courses-toolbar__option:hover {
+  background: var(--neutral-bg);
+}
+
+/* The tick keeps its space on every row so the labels do not shift. */
+.courses-toolbar__tick {
+  flex-shrink: 0;
+  visibility: hidden;
+  color: var(--green);
+}
+
+.courses-toolbar__option.is-selected .courses-toolbar__tick {
+  visibility: visible;
+}
+
 /* No gutter of its own: the toolbar, the grid and the page title all sit on
    the same left edge, which PageContainer sets. A rule separates the header. */
 .courses-wrapper {
