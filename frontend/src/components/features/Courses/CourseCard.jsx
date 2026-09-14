@@ -1,6 +1,7 @@
 import { MoreHorizontal, Pencil, Trash2, Code2 } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import { useClickOutside } from '../../../hooks/useClickOutside'
+import { courseColorValue } from './courseColors'
 
 /**
  * @param {object} progress  real counts for this course, { done, active, total }.
@@ -11,9 +12,12 @@ export function CourseCard({ course, progress, onOpen, onEdit, onRemove }) {
     const {
         name,
         code,
-        color,
+        color: storedColor,
         taskCount,
     } = course
+
+    /* The row stores a colour name; the design system owns the value. */
+    const color = courseColorValue(storedColor)
 
     const [showMenu, setShowMenu] = useState(false)
     const closeMenu = useCallback(() => setShowMenu(false), [])
@@ -42,18 +46,9 @@ export function CourseCard({ course, progress, onOpen, onEdit, onRemove }) {
     }
 
     return (
-        <div className="course-card" onClick={onOpen}>
+        <div className="course-card" onClick={onOpen} style={{ '--course-color': color }}>
             {/* cover */}
-            <div
-                className="course-card__cover"
-                style={{
-                    background: `linear-gradient(
-            135deg,
-            ${color}33 0%,
-            ${color}66 100%
-          )`,
-                }}
-            >
+            <div className="course-card__cover">
                 <div
                     className="course-card__cover-icon"
                     style={{ color }}
