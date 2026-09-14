@@ -33,37 +33,41 @@ export default function GuidancePanel({ open, onClose }) {
       title="Make yourself at home."
       subtitle="Your personal workspace for a calmer semester."
     >
-      <ol className="guidance__steps">
-        {STEPS.map((step, index) => (
-          <li key={step.title} className="guidance__step">
-            <span className="guidance__step-number" aria-hidden="true">
-              {index + 1}.
-            </span>
-            <div>
-              <p className="guidance__step-title">{step.title}</p>
-              <p className="guidance__step-text">{step.text}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      {/* Modal supplies no padding of its own — every body brings its own,
+          the way .modal-form does for the forms. */}
+      <div className="guidance">
+        <ol className="guidance__steps">
+          {STEPS.map((step, index) => (
+            <li key={step.title} className="guidance__step">
+              <span className="guidance__step-number" aria-hidden="true">
+                {index + 1}.
+              </span>
+              <div>
+                <p className="guidance__step-title">{step.title}</p>
+                <p className="guidance__step-text">{step.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
 
-      <p className="guidance__note">
-        <Database size={14} aria-hidden="true" />
-        <span>
-          Your courses and assignments are saved on the server, so they follow you to
-          any browser you sign in from.
-        </span>
-      </p>
+        <p className="guidance__note">
+          <Database size={14} aria-hidden="true" />
+          <span>
+            Your courses and assignments are saved on the server, so they follow you
+            to any browser you sign in from.
+          </span>
+        </p>
 
-      <p className="guidance__shortcuts">
-        <kbd>Esc</kbd>
-        <span>Close a window</span>
-      </p>
+        <p className="guidance__shortcuts">
+          <kbd>Esc</kbd>
+          <span>Close a window</span>
+        </p>
 
-      <div className="guidance__actions">
-        <Button onClick={onClose} iconRight={<ArrowRight size={16} />}>
-          Got it. Let’s begin
-        </Button>
+        <div className="guidance__actions">
+          <Button onClick={onClose} iconRight={<ArrowRight size={16} />}>
+            Got it. Let’s begin
+          </Button>
+        </div>
       </div>
     </Modal>
   )
