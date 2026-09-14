@@ -1,12 +1,13 @@
+import { Link } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 import GlobalSearch from './GlobalSearch'
 import './Topbar.css'
 
 /**
  * Sticky header: breadcrumb on the left, global search and identity on the
- * right. Pages pass their own breadcrumb label.
+ * right. AppLayout passes the trail; every crumb but the last is a link.
  */
-export default function Topbar({ breadcrumb = 'Overview', onMenuClick }) {
+export default function Topbar({ crumbs = [{ label: 'Overview' }], onMenuClick }) {
   const today = new Date().toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -25,11 +26,24 @@ export default function Topbar({ breadcrumb = 'Overview', onMenuClick }) {
       </button>
 
       <nav className="topbar__crumbs" aria-label="Breadcrumb">
-        <span className="topbar__crumb">My workspace</span>
-        <span className="topbar__sep" aria-hidden="true">
-          /
-        </span>
-        <span className="topbar__crumb topbar__crumb--current">{breadcrumb}</span>
+        {crumbs.map((crumb, index) => (
+          <span key={crumb.label} className="topbar__crumb-group">
+            {index > 0 && (
+              <span className="topbar__sep" aria-hidden="true">
+                /
+              </span>
+            )}
+            {crumb.to ? (
+              <Link to={crumb.to} className="topbar__crumb topbar__crumb--link">
+                {crumb.label}
+              </Link>
+            ) : (
+              <span className="topbar__crumb topbar__crumb--current" aria-current="page">
+                {crumb.label}
+              </span>
+            )}
+          </span>
+        ))}
       </nav>
 
       <div className="topbar__right">
