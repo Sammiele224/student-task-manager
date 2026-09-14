@@ -86,6 +86,7 @@ export default function TaskListPanel({
   onToggleDone,
   onStatusChange,
   onEdit,
+  onDelete,
 }) {
   const [query, setQuery] = useState('')
   const [course, setCourse] = useState('All')
@@ -245,6 +246,7 @@ export default function TaskListPanel({
                   onToggleDone={onToggleDone}
                   onStatusChange={onStatusChange}
                   onEdit={onEdit}
+                  onDelete={onDelete}
                 />
               ))}
           </div>

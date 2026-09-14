@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import {
   BookOpen,
   CalendarDays,
@@ -61,13 +61,13 @@ export default function Sidebar({ open = false, onNavigate }) {
 
   return (
     <aside className={`sidebar ${open ? 'is-open' : ''}`}>
-      <div className="sidebar__brand">
+      <Link to="/" className="sidebar__brand" onClick={onNavigate} aria-label="The Rest of Us — go to Overview">
         <Logo />
         <div className="sidebar__brand-text">
           <span className="sidebar__brand-name">THE REST OF US</span>
           <span className="sidebar__brand-sub">STUDENT WORKSPACE</span>
         </div>
-      </div>
+      </Link>
 
       {/* The dot was decoration; it now reports whether the API is answering,
           which is the first thing to check when nothing saves. */}

@@ -7,79 +7,15 @@
   color: var(--subtle);
 }
 
-.courses-toolbar__semester {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--line);
-  background: var(--surface);
-  font-size: var(--text-sm);
-  color: var(--ink);
+/* Only a card that actually opens a course looks and behaves clickable. */
+.course-card.is-openable {
   cursor: pointer;
-  transition: border-color var(--duration-fast) var(--ease),
-    background-color var(--duration-fast) var(--ease);
-}
-.courses-toolbar__semester:hover {
-  border-color: var(--line-strong);
-  background: var(--neutral-bg);
 }
 
-.courses-toolbar__semester:focus-visible {
+.course-card.is-openable:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
-}
-
-.courses-toolbar__semester-wrap {
-  position: relative;
-}
-
-.courses-toolbar__menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 20;
-  min-width: 200px;
-  margin: 0;
-  padding: var(--space-1);
-  list-style: none;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-}
-
-.courses-toolbar__option {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border: none;
-  border-radius: var(--radius-md);
-  background: transparent;
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  color: var(--ink);
-  text-align: left;
-  cursor: pointer;
-}
-
-.courses-toolbar__option:hover {
-  background: var(--neutral-bg);
-}
-
-/* The tick keeps its space on every row so the labels do not shift. */
-.courses-toolbar__tick {
-  flex-shrink: 0;
-  visibility: hidden;
-  color: var(--green);
-}
-
-.courses-toolbar__option.is-selected .courses-toolbar__tick {
-  visibility: visible;
+  border-color: var(--course-color, var(--green));
 }
 
 /* No gutter of its own: the toolbar, the grid and the page title all sit on
@@ -107,7 +43,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  cursor: pointer;
+  cursor: default;
   transition: border-color var(--duration) var(--ease),
     box-shadow var(--duration) var(--ease),
     transform var(--duration) var(--ease);
@@ -356,6 +292,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
+  cursor: pointer;
   min-height: 221px;
   width: 100%;
   background: var(--input);
