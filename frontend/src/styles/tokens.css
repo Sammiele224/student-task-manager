@@ -1,5 +1,10 @@
-/* Generated from src/design-tokens.js by npm run tokens. */
-/* Typeface: Arial, with system sans-serif fallbacks. No webfont download required. */
+/* Every design token in the app. Edit this file directly — it is hand
+   maintained, not generated. Colours come from the design handoff; the
+   structural scale below it does not.
+
+   Adding a colour means adding it to :root and to BOTH theme blocks
+   ([data-theme='cyber'] and the prefers-color-scheme fallback), or it will
+   silently fall back to the light value in the dark theme. */
 
 :root {
   color-scheme: light;

@@ -60,7 +60,7 @@ re-run — every statement uses `IF NOT EXISTS`.
 Then, run the SQL script to seed data:
 
 ```bash
-mysql -u root -p < backend/db/seed.sql
+mysql -u root -p < backend/db/SeedData.sql
 ```
 ### 3. Start the backend 
 
@@ -89,7 +89,12 @@ npm run dev               # http://localhost:5173
 ```
 
 Vite proxies every `/api/*` request to the backend on port 4000, so frontend
-code just calls `fetch('/api/courses')` — no host, no CORS handling.
+code just calls `fetch('/api/v1/courses')` — no host, no CORS handling.
+
+> One file still breaks this: `src/api/CourseApi.js` hard-codes
+> `http://localhost:4000`, so it bypasses the proxy and leans on the backend's
+> CORS allowance. It works locally and breaks anywhere else. New code should use
+> a relative path, the way `TaskApi.js` does.
 
 ### Commands
 
@@ -105,23 +110,41 @@ code just calls `fetch('/api/courses')` — no host, no CORS handling.
 
 ## API endpoints
 
+Everything is mounted under **`/api/v1`**. `/api/health` is the one exception —
+it sits outside the version prefix.
+
 ```
-GET    /api/courses                list courses
-POST   /api/courses                create course
-PUT    /api/courses/:id            update course
-DELETE /api/courses/:id            delete course
+GET    /api/v1/courses             list courses, each with taskCount +
+                                   completedTaskCount
+POST   /api/v1/courses             create course
+PUT    /api/v1/courses/:id         update course
+DELETE /api/v1/courses/:id         delete course
 
-GET    /api/tasks                  list tasks
-                                   ?search= &courseId= &status= &priority= &sort=dueDate
-POST   /api/tasks                  create task
-GET    /api/tasks/:id              one task
-PUT    /api/tasks/:id              update task
-DELETE /api/tasks/:id              delete task
-PATCH  /api/tasks/:id/status       change status only
+GET    /api/v1/tasks               list tasks
+                                   ?search= &courseId= &status= &priority=
+                                   &sort=dueDate &order=asc
+POST   /api/v1/tasks               create task
+GET    /api/v1/tasks/:id           one task
+PUT    /api/v1/tasks/:id           update task
+DELETE /api/v1/tasks/:id           delete task
+PATCH  /api/v1/tasks/:id/status    change status only
 
-GET    /api/stats                  dashboard numbers
+GET    /api/v1/stats               dashboard numbers
 GET    /api/health                 server + database check
 ```
+
+### Response envelope
+
+Every route under `/api/v1` wraps its payload:
+
+```json
+{ "success": true, "data": [ ... ] }
+{ "success": true, "message": "Task updated successfully" }
+{ "success": false, "message": "Course not found." }
+```
+
+The two server-level handlers are the exception — an unmatched path and an
+unhandled throw both answer `{ "error": "..." }`, without `success`.
 
 ### Conventions
 
@@ -131,19 +154,22 @@ GET    /api/health                 server + database check
 | **Field names**   | `camelCase` in JSON (`courseId`, `dueDate`), `snake_case` in SQL |
 | **Priority**      | `"low"` \| `"medium"` \| `"high"`                                |
 | **Status**        | `"todo"` \| `"in_progress"` \| `"done"`                          |
-| **Errors**        | Non-2xx with `{ "error": "A human-readable message" }`           |
+| **Errors**        | Non-2xx with `{ "success": false, "message": "..." }` from a route; `{ "error": "..." }` from the server's 404 and error handlers |
 | **Overdue**       | `due_date < today AND status != 'done'`                          |
 | **Due this week** | `due_date` within the next 7 days, inclusive of today            |
 
-### `GET /api/stats` response shape
+### `GET /api/v1/stats` response shape
 
 ```json
 {
-  "totalTasks": 35,
-  "completedTasks": 22,
-  "overdueTasks": 3,
-  "dueThisWeek": 8,
-  "completionRate": 62
+  "success": true,
+  "data": {
+    "totalTasks": 35,
+    "completedCount": 22,
+    "overdueCount": 3,
+    "dueThisWeekCount": 8,
+    "completionRate": 62
+  }
 }
 ```
 
@@ -160,6 +186,9 @@ GET    /api/health                 server + database check
 | `/tasks/:id` | Task detail |
 | `/upcoming`  | Upcoming    |
 | `/calendar`  | Calendar    |
+| `/profile`   | Profile     |
+| `/signin`    | Sign in — renders outside `AppLayout`, so no sidebar or topbar |
+| anything else | Not found  |
 
 ---
 
@@ -169,11 +198,14 @@ GET    /api/health                 server + database check
 student-task-manager/
 ├── frontend/
 │   └── src/
+│       ├── api/             CourseApi.js, TaskApi.js — every fetch lives here
 │       ├── components/
-│       │   ├── ui/          Button, Input, Select, Card, Badge  ← reuse these
-│       │   └── layout/      AppLayout, Sidebar, Topbar, PageContainer, PageHeader
+│       │   ├── ui/          Button, IconButton, Input, Select, Card, Badge  ← reuse these
+│       │   ├── layout/      AppLayout, Sidebar, Topbar, PageContainer, PageHeader
+│       │   └── features/    Courses/, Tasks/, Calendar/, Overview/ — page-specific parts
 │       ├── pages/           One file per route
-│       ├── styles/          tokens.css (colours, type, spacing) + global.css
+│       ├── hooks/           Shared hooks (useClickOutside)
+│       ├── styles/          tokens.css + global.css, then features/ per area
 │       ├── theme/           Light / Cyber theme provider
 │       ├── App.jsx          Route table
 │       └── main.jsx         Entry point
@@ -181,8 +213,9 @@ student-task-manager/
 └── backend/
     ├── db/
     │   ├── schema.sql       Tables (run this first)
-    │   └── seed.sql         Demo data
+    │   └── SeedData.sql     Demo data
     └── src/
+        ├── routes/          courses.js, tasks.js, stats.js
         ├── server.js        Express app — add routers here
         └── db.js            Shared MySQL connection pool
 ```
@@ -198,7 +231,7 @@ stays consistent.
 ### Components
 
 ```jsx
-import { Button, Input, Select, Card, Badge } from '../components/ui'
+import { Button, IconButton, Input, Select, Card, Badge } from '../components/ui'
 import { PageContainer, PageHeader } from '../components/layout'
 ```
 
@@ -208,10 +241,11 @@ import { PageContainer, PageHeader } from '../components/layout'
 | `Input`   | `label`, `hint`, `error`, `required`, `optional`, `icon`, `as="textarea"`  |
 | `Select`  | `label`, `options={[{value,label}]}`, `placeholder`, `error`, `required`   |
 | `Card`    | `eyebrow`, `title`, `action`, `footer`, `padding` `none\|sm\|md\|lg`, `tone` `default\|subtle\|outline`, `hoverable` |
-| `Badge`   | `tone` `neutral\|accent\|high\|medium\|low\|overdue\|done`, `dot`          |
+| `Badge`   | `tone` `neutral\|green\|high\|medium\|low\|overdue\|done`, `dot`, `dotColor` |
 
 `Badge` carries the status colours: `overdue` and `high` are red, `medium`
-amber, `low` and `done` green.
+amber, `low` and `done` green. Leave `tone` off and it reads the child text —
+`"high"`, `"todo"`, `"in_progress"` and friends all map to the right tone.
 
 ### What a page looks like
 
@@ -256,30 +290,47 @@ colour** — use the variable and both themes work for free:
 
 ```css
 .my-thing {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
   padding: var(--space-4);
   border-radius: var(--radius-lg);
 }
 ```
 
-| Purpose             | Variable                                                     |
-| ------------------- | ------------------------------------------------------------ |
-| Page / card / panel | `--bg-page`, `--bg-surface`, `--bg-surface-subtle`           |
-| Text                | `--text-primary`, `--text-secondary`, `--text-muted`          |
-| Brand action        | `--accent`, `--accent-hover`, `--accent-contrast`, `--accent-soft` |
-| Status              | `--danger`, `--warning`, `--success` (+ each `-soft`)         |
-| Course colours      | `--course-green`, `--course-purple`, `--course-amber`, `--course-blue` |
-| Borders             | `--border`, `--border-strong`                                 |
-| Spacing             | `--space-1` … `--space-16` (4px scale)                        |
-| Radii               | `--radius-sm\|md\|lg\|xl\|pill`                               |
+| Purpose             | Variable                                                      |
+| ------------------- | ------------------------------------------------------------- |
+| Surfaces            | `--bg` (page), `--surface` (card), `--sidebar`, `--input`      |
+| Text                | `--ink`, `--subtle`, `--muted`, `--faint` — darkest to lightest |
+| Text on a fill      | `--on-primary`, `--on-danger`, `--inverse`                     |
+| Brand action        | `--green`, `--green-hover`, `--green-soft`                     |
+| Secondary accent    | `--accent`, `--accent-soft` — a different hue, not the brand   |
+| Status              | `--danger`, `--warning`, `--success`, `--neutral` (+ each `-bg` and `-line`) |
+| Course colours      | `--course-software`, `--course-design`, `--course-data`, `--course-math` |
+| Lines               | `--line`, `--line-strong`                                      |
+| Hero / overlay      | `--hero-base`, `--hero-accent`, `--overlay`, `--photo-scrim`   |
+| Elevation           | `--shadow-sm\|md\|lg`, `--focus-ring`                          |
+| Type                | `--font-display`, `--font-sans`, `--text-xs` … `--text-4xl`    |
+| Spacing             | `--space-1` … `--space-16`                                     |
+| Radii               | `--radius-sm\|md\|lg\|xl\|pill`                                |
+
+Two pairs are easy to mix up:
+
+- **`--green` is the brand; `--accent` is not.** The brand green drives buttons,
+  links and active nav. `--accent` is a separate hue that reads purple in Cyber,
+  so reaching for it to mean "our colour" breaks the dark theme. Soft brand
+  backgrounds are `--green-soft`, not `--accent-soft`.
+- **Status fills end in `-bg`, status borders in `-line`** — `--danger-bg` behind
+  `--danger` text, never `--danger` as a background.
 
 ### Themes
 
-Two themes: **Light** (warm paper, forest green) and **Cyber** (near-black,
-mint). The switch is at the bottom of the sidebar. It follows the operating
-system preference until someone picks one, then remembers it.
+Two themes: **Light** (soft green-tinted white, forest green) and **Cyber**
+(near-black, mint). The switch is at the bottom of the sidebar. It follows the
+operating system preference until someone picks one, then remembers it.
+
+`data-theme` on `<html>` is either `light` or `cyber`; `tokens.css` also
+answers to `dark` as an alias so a token block works either way.
 
 Because everything reads from tokens, you never write theme-specific CSS.
 
@@ -338,8 +389,8 @@ application-level check is missed:
   clear message.
 
 > Validation such as "due date cannot be in the past" belongs in the
-> `POST /api/tasks` handler, not the database — `seed.sql` inserts directly and
-> must be able to create overdue rows for testing.
+> `POST /api/v1/tasks` handler, not the database — `SeedData.sql` inserts
+> directly and must be able to create overdue rows for testing.
 
 ---
 
@@ -353,7 +404,10 @@ that `DB_USER` / `DB_PASSWORD` match your local install.
 You haven't created the schema yet — run step 2 of Getting started.
 
 **Frontend calls return 404 or HTML instead of JSON**
-The backend isn't running. Start it on port 4000; the Vite proxy expects it there.
+The backend isn't running — start it on port 4000, where the Vite proxy expects
+it. If the server *is* up, check the path: routes live under `/api/v1/...`, and
+`/api/courses` without the version prefix returns the 404 handler's
+`{ "error": "Not found" }`.
 
 **Dates arrive as `2026-09-07T00:00:00.000Z` instead of `2026-09-07`**
 The pool sets `dateStrings: true`, so MySQL returns plain `YYYY-MM-DD`. If you
