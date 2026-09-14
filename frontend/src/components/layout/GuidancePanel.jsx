@@ -48,7 +48,7 @@ export default function GuidancePanel({ open, onClose }) {
       </ol>
 
       <p className="guidance__note">
-        <Database size={16} aria-hidden="true" />
+        <Database size={14} aria-hidden="true" />
         <span>
           Your courses and assignments are saved on the server, so they follow you to
           any browser you sign in from.

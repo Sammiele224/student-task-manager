@@ -8,7 +8,6 @@ import { CoursesToolbar } from '../components/features/Courses/CourseToolBar'
 import {
   ALL_SEMESTERS,
   filterBySemester,
-  semesterOptions,
 } from '../components/features/Courses/courseSemester'
 import { CreateCourseModal } from '../components/features/Courses/CreateCourseModal'
 import { EditCourseModal } from '../components/features/Courses/EditCourseModal'
@@ -135,9 +134,7 @@ export default function Courses() {
     })
   }
 
-  /* The semester a course belongs to is read off its created_at, so the
-     dropdown only offers terms that actually hold something. */
-  const semesters = semesterOptions(courses)
+  /* The semester a course belongs to is read off its created_at. */
   const visibleCourses = filterBySemester(courses, semester)
 
   // page total
@@ -173,7 +170,7 @@ export default function Courses() {
       <div className="courses-wrapper">
         <CoursesToolbar
           count={visibleCourses.length}
-          semesters={semesters}
+          courses={courses}
           value={semester}
           onChange={(key) => {
             setSemester(key)

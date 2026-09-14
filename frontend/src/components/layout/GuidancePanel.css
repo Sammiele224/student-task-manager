@@ -2,8 +2,8 @@
 
 .guidance__steps {
   display: grid;
-  gap: var(--space-5);
-  margin: 0 0 var(--space-6);
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
   padding: 0;
   list-style: none;
   counter-reset: guidance;
@@ -11,48 +11,50 @@
 
 .guidance__step {
   display: grid;
-  grid-template-columns: 22px 1fr;
-  gap: var(--space-3);
+  grid-template-columns: 18px 1fr;
+  gap: var(--space-2);
 }
 
 .guidance__step-number {
   font-family: var(--font-sans);
-  font-size: var(--text-md);
+  font-size: var(--text-sm);
   font-weight: 600;
+  line-height: var(--leading-normal);
   color: var(--faint);
 }
 
 .guidance__step-title {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
   font-weight: 600;
+  line-height: var(--leading-snug);
   color: var(--ink);
 }
 
 .guidance__step-text {
-  margin: var(--space-1) 0 0;
-  font-size: var(--text-md);
-  line-height: var(--leading-normal);
+  margin: 2px 0 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
   color: var(--subtle);
 }
 
 .guidance__note {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-3);
-  margin: 0 0 var(--space-5);
-  padding: var(--space-4);
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3);
   border-radius: var(--radius-md);
   background: var(--green-soft);
-  font-size: var(--text-md);
-  line-height: var(--leading-normal);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
   color: var(--subtle);
 }
 
 .guidance__note svg {
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 1px;
   color: var(--green);
 }
 
@@ -60,8 +62,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin: 0 0 var(--space-6);
-  font-size: var(--text-sm);
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-xs);
   color: var(--muted);
 }
 

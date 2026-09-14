@@ -4,7 +4,6 @@ import {
   ArrowRight,
   CalendarDays,
   Clock,
-  Leaf,
   ListChecks,
   Plus,
   Sparkles,
@@ -27,7 +26,13 @@ import HeroPanel from '../components/features/Overview/HeroPanel'
 import StatCard from '../components/features/Overview/StatCard'
 import WeekPanel from '../components/features/Overview/WeekPanel'
 import FocusPanel from '../components/features/Overview/FocusPanel'
-import { greetingDate, semesterLabel } from '../components/features/Overview/overviewDates'
+import { greetingDate } from '../components/features/Overview/overviewDates'
+import SemesterPicker from '../components/features/Courses/SemesterPicker'
+import {
+  ALL_SEMESTERS,
+  filterBySemester,
+} from '../components/features/Courses/courseSemester'
+import '../components/features/Courses/SemesterPicker.css'
 import { PageContainer, PageHeader } from '../components/layout'
 import { Button } from '../components/ui'
 
@@ -68,6 +73,14 @@ export default function Overview() {
   const [creating, setCreating] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [taskToDelete, setTaskToDelete] = useState(null)
+  const [semester, setSemester] = useState(ALL_SEMESTERS)
+
+  /* The picker in the header scopes the course list below it. The task figures
+     stay whole-workspace: they answer "how am I doing", not "this term". */
+  const semesterCourses = useMemo(
+    () => filterBySemester(courses, semester),
+    [courses, semester]
+  )
 
   const stats = getDashboardStats(tasks)
   const courseProgress = useMemo(() => getCourseProgress(tasks), [tasks])
@@ -118,10 +131,11 @@ export default function Overview() {
         }
         subtitle="Let's make a little room for what matters."
         actions={
-          <span className="overview-semester">
-            <Leaf size={14} aria-hidden="true" />
-            {semesterLabel()}
-          </span>
+          <SemesterPicker
+            value={semester}
+            courses={courses}
+            onChange={setSemester}
+          />
         }
       />
 
@@ -172,7 +186,7 @@ export default function Overview() {
             <header className="overview-block-head">
               <h2 className="overview-block-title u-display">
                 My courses
-                <span className="overview-count">{courses.length}</span>
+                <span className="overview-count">{semesterCourses.length}</span>
               </h2>
               <Link to="/courses" className="overview-link">
                 View all courses
@@ -180,13 +194,17 @@ export default function Overview() {
               </Link>
             </header>
 
-            {courses.length === 0 ? (
+            {semesterCourses.length === 0 ? (
               <p className="overview-empty">
-                {loading ? 'Loading your courses…' : 'No courses yet. Add one to get started.'}
+                {loading
+                  ? 'Loading your courses…'
+                  : courses.length === 0
+                    ? 'No courses yet. Add one to get started.'
+                    : 'No courses in this semester.'}
               </p>
             ) : (
               <div className="overview-courses">
-                {courses.slice(0, COURSES_ON_DASHBOARD).map((course) => (
+                {semesterCourses.slice(0, COURSES_ON_DASHBOARD).map((course) => (
                   <CourseCard
                     key={course.id}
                     course={course}
