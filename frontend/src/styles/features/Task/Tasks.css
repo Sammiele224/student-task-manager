@@ -219,9 +219,17 @@
 }
 
 /* The pencil stays out of the way until the row is hovered or focused. */
-.tasks-row-edit {
+/* Row actions stay hidden until the row is hovered, so a long list reads as
+   titles rather than as rows of buttons. Keyboard users get them on focus. */
+.tasks-row-actions {
   margin-left: auto;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tasks-row-action {
   display: flex;
   padding: 6px;
   border: none;
@@ -231,17 +239,29 @@
   cursor: pointer;
   opacity: 0;
   transition: opacity var(--duration-fast) var(--ease),
-    color var(--duration-fast) var(--ease);
+    color var(--duration-fast) var(--ease),
+    background var(--duration-fast) var(--ease);
 }
 
-.tasks-row:hover .tasks-row-edit,
-.tasks-row-edit:focus-visible {
+.tasks-row:hover .tasks-row-action,
+.tasks-row-action:focus-visible {
   opacity: 1;
 }
 
-.tasks-row-edit:hover {
+.tasks-row-action:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.tasks-row-action:hover {
   background: var(--neutral-bg);
   color: var(--ink);
+}
+
+/* Deleting cannot be undone, so the bin turns red before it is clicked. */
+.tasks-row-action--danger:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .tasks-checkbox {

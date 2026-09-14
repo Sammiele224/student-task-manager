@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom'
-import { AlertTriangle, Check, Pencil } from 'lucide-react'
+import { AlertTriangle, Check, Pencil, Trash2 } from 'lucide-react'
 import StatusSelect from './StatusSelect'
 import { formatDue, isTaskOverdue, priorityMeta } from './taskMeta'
 
 /**
  * One task as a table row: title, course, due date, priority badge, status.
- * The title links to the task detail page; the pencil opens the edit dialog.
+ * The title links to the task detail page; the pencil opens the edit dialog
+ * and the bin asks the page to confirm before removing the task.
  */
-export default function TaskRow({ task, onToggleDone, onStatusChange, onEdit }) {
+export default function TaskRow({ task, onToggleDone, onStatusChange, onEdit, onDelete }) {
   const due = formatDue(task.dueDate, task.status)
   const overdue = isTaskOverdue(task)
   const done = task.status === 'done'
@@ -40,15 +41,30 @@ export default function TaskRow({ task, onToggleDone, onStatusChange, onEdit }) 
           </p>
         </div>
 
-        {onEdit && (
-          <button
-            type="button"
-            className="tasks-row-edit"
-            onClick={() => onEdit(task)}
-            aria-label={`Edit "${task.title}"`}
-          >
-            <Pencil size={14} aria-hidden="true" />
-          </button>
+        {(onEdit || onDelete) && (
+          <div className="tasks-row-actions">
+            {onEdit && (
+              <button
+                type="button"
+                className="tasks-row-action"
+                onClick={() => onEdit(task)}
+                aria-label={`Edit "${task.title}"`}
+              >
+                <Pencil size={14} aria-hidden="true" />
+              </button>
+            )}
+
+            {onDelete && (
+              <button
+                type="button"
+                className="tasks-row-action tasks-row-action--danger"
+                onClick={() => onDelete(task)}
+                aria-label={`Delete "${task.title}"`}
+              >
+                <Trash2 size={14} aria-hidden="true" />
+              </button>
+            )}
+          </div>
         )}
       </div>
 

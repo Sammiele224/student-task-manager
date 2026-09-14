@@ -80,6 +80,7 @@ export default function Tasks() {
         onToggleDone={handleToggleDone}
         onStatusChange={handleStatusChange}
         onEdit={setEditingTask}
+        onDelete={setTaskToDelete}
       />
 
       <CreateTaskModal
