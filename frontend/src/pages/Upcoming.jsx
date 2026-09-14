@@ -173,6 +173,7 @@ export default function Upcoming() {
           onToggleDone={handleToggleDone}
           onStatusChange={handleStatusChange}
           onEdit={setEditingTask}
+          onDelete={setTaskToDelete}
         />
       </div>
 
