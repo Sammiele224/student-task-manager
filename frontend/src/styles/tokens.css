@@ -1,24 +1,277 @@
-/* ==========================================================================
-   Design tokens — THE LAST OF US · Student Workspace
-   Single source of truth for colour, type, spacing and motion.
-   Every component reads from these variables. Never hard-code a colour.
-   ========================================================================== */
+/* Generated from src/design-tokens.js by npm run tokens. */
+/* Typeface: Arial, with system sans-serif fallbacks. No webfont download required. */
 
 :root {
-  /* --- Typography ------------------------------------------------------ */
-  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+  color-scheme: light;
+  --font-base: Arial, Helvetica, 'Helvetica Neue', sans-serif;
+  --radius: 12px;
+  --shadow: 0 6px 20px var(--shadow-color);
+  /* Foundation */
+  --bg: #F2F8F4;
+  --surface: #FFFFFF;
+  --sidebar: #F9FCFA;
+  --input: #F5FAF7;
+  --line: #DDE9E1;
+  --line-strong: #B8CFC0;
+  --white: #FFFFFF;
+  --black: #000000;
+
+  /* Text & icons */
+  --ink: #203D2E;
+  --subtle: #486553;
+  --muted: #62796D;
+  --faint: #8FA699;
+  --on-primary: #FFFFFF;
+  --on-danger: #FFFFFF;
+  --inverse: #F5FFF8;
+
+  /* Brand & interaction */
+  --green: #216B4F;
+  --green-hover: #19553F;
+  --green-soft: #E2EFE7;
+  --accent: #3E8562;
+  --accent-soft: #CBE4D3;
+
+  /* Status & priority */
+  --danger: #AC414B;
+  --danger-bg: #FBECEE;
+  --danger-line: #E9BCC3;
+  --warning: #80601B;
+  --warning-bg: #FBF4DF;
+  --warning-line: #E7D7AB;
+  --success: #326D4D;
+  --success-bg: #E6F3EA;
+  --success-line: #BFDBC9;
+  --neutral: #526C5D;
+  --neutral-bg: #EBF2ED;
+  --neutral-line: #D3E1D7;
+
+  /* Course identifiers */
+  --course-software: #38846B;
+  --course-design: #50878C;
+  --course-data: #63956A;
+  --course-math: #6A85A5;
+
+  /* Photography & overlays */
+  --hero-base: #163A29;
+  --hero-accent: #BDE8C8;
+  --hero-shade-start: #102A20EB;
+  --hero-shade-mid: #163326A6;
+  --hero-shade-end: #102A2026;
+  --hero-card: #F4FBF7F0;
+  --photo-scrim: #0C302680;
+  --overlay: #0B2018CC;
+  --shadow-color: #12302314;
+  --glow-color: #216B4F0D;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  /* Foundation */
+  --bg: #0A1018;
+  --surface: #111C26;
+  --sidebar: #0D1620;
+  --input: #0D1721;
+  --line: #263945;
+  --line-strong: #4A6674;
+  --white: #FFFFFF;
+  --black: #000000;
+
+  /* Text & icons */
+  --ink: #E4F2F0;
+  --subtle: #A4BCC5;
+  --muted: #8DA5B2;
+  --faint: #607B8B;
+  --on-primary: #062C2B;
+  --on-danger: #301019;
+  --inverse: #E6FFFC;
+
+  /* Brand & interaction */
+  --green: #67E8D8;
+  --green-hover: #95F5E9;
+  --green-soft: #16383A;
+  --accent: #CC95FF;
+  --accent-soft: #372745;
+
+  /* Status & priority */
+  --danger: #FF90AC;
+  --danger-bg: #39232F;
+  --danger-line: #6B3F50;
+  --warning: #E9C978;
+  --warning-bg: #383322;
+  --warning-line: #655638;
+  --success: #A0DDB7;
+  --success-bg: #203B30;
+  --success-line: #416B52;
+  --neutral: #A6BAC7;
+  --neutral-bg: #21303D;
+  --neutral-line: #405867;
+
+  /* Course identifiers */
+  --course-software: #38846B;
+  --course-design: #50878C;
+  --course-data: #63956A;
+  --course-math: #6A85A5;
+
+  /* Photography & overlays */
+  --hero-base: #081F2B;
+  --hero-accent: #89F5DF;
+  --hero-shade-start: #04131AF2;
+  --hero-shade-mid: #081C2AB8;
+  --hero-shade-end: #10243659;
+  --hero-card: #132F3BEF;
+  --photo-scrim: #04151CAF;
+  --overlay: #020911D9;
+  --shadow-color: #00000033;
+  --glow-color: #67E8D824;
+}
+
+/* The theme toggle writes data-theme="cyber"; the handoff spells the same
+   palette "dark". Both selectors carry it, so either spelling works. */
+[data-theme='cyber'] {
+  color-scheme: dark;
+  /* Foundation */
+  --bg: #0A1018;
+  --surface: #111C26;
+  --sidebar: #0D1620;
+  --input: #0D1721;
+  --line: #263945;
+  --line-strong: #4A6674;
+  --white: #FFFFFF;
+  --black: #000000;
+
+  /* Text & icons */
+  --ink: #E4F2F0;
+  --subtle: #A4BCC5;
+  --muted: #8DA5B2;
+  --faint: #607B8B;
+  --on-primary: #062C2B;
+  --on-danger: #301019;
+  --inverse: #E6FFFC;
+
+  /* Brand & interaction */
+  --green: #67E8D8;
+  --green-hover: #95F5E9;
+  --green-soft: #16383A;
+  --accent: #CC95FF;
+  --accent-soft: #372745;
+
+  /* Status & priority */
+  --danger: #FF90AC;
+  --danger-bg: #39232F;
+  --danger-line: #6B3F50;
+  --warning: #E9C978;
+  --warning-bg: #383322;
+  --warning-line: #655638;
+  --success: #A0DDB7;
+  --success-bg: #203B30;
+  --success-line: #416B52;
+  --neutral: #A6BAC7;
+  --neutral-bg: #21303D;
+  --neutral-line: #405867;
+
+  /* Course identifiers */
+  --course-software: #38846B;
+  --course-design: #50878C;
+  --course-data: #63956A;
+  --course-math: #6A85A5;
+
+  /* Photography & overlays */
+  --hero-base: #081F2B;
+  --hero-accent: #89F5DF;
+  --hero-shade-start: #04131AF2;
+  --hero-shade-mid: #081C2AB8;
+  --hero-shade-end: #10243659;
+  --hero-card: #132F3BEF;
+  --photo-scrim: #04151CAF;
+  --overlay: #020911D9;
+  --shadow-color: #00000033;
+  --glow-color: #67E8D824;
+}
+
+/* Respect the operating system until the user picks a theme explicitly. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+  color-scheme: dark;
+  /* Foundation */
+  --bg: #0A1018;
+  --surface: #111C26;
+  --sidebar: #0D1620;
+  --input: #0D1721;
+  --line: #263945;
+  --line-strong: #4A6674;
+  --white: #FFFFFF;
+  --black: #000000;
+
+  /* Text & icons */
+  --ink: #E4F2F0;
+  --subtle: #A4BCC5;
+  --muted: #8DA5B2;
+  --faint: #607B8B;
+  --on-primary: #062C2B;
+  --on-danger: #301019;
+  --inverse: #E6FFFC;
+
+  /* Brand & interaction */
+  --green: #67E8D8;
+  --green-hover: #95F5E9;
+  --green-soft: #16383A;
+  --accent: #CC95FF;
+  --accent-soft: #372745;
+
+  /* Status & priority */
+  --danger: #FF90AC;
+  --danger-bg: #39232F;
+  --danger-line: #6B3F50;
+  --warning: #E9C978;
+  --warning-bg: #383322;
+  --warning-line: #655638;
+  --success: #A0DDB7;
+  --success-bg: #203B30;
+  --success-line: #416B52;
+  --neutral: #A6BAC7;
+  --neutral-bg: #21303D;
+  --neutral-line: #405867;
+
+  /* Course identifiers */
+  --course-software: #38846B;
+  --course-design: #50878C;
+  --course-data: #63956A;
+  --course-math: #6A85A5;
+
+  /* Photography & overlays */
+  --hero-base: #081F2B;
+  --hero-accent: #89F5DF;
+  --hero-shade-start: #04131AF2;
+  --hero-shade-mid: #081C2AB8;
+  --hero-shade-end: #10243659;
+  --hero-card: #132F3BEF;
+  --photo-scrim: #04151CAF;
+  --overlay: #020911D9;
+  --shadow-color: #00000033;
+  --glow-color: #67E8D824;
+}
+}
+
+/* ==========================================================================
+   Structure — type scale, spacing, radii, layout and motion.
+   Not part of the colour handoff; kept here so one file holds every token.
+   The scale is deliberately compact: a study tool shows a lot at once.
+   ========================================================================== */
+:root {
+  --font-display: 'Cabin', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Cabin', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
 
-  --text-xs: 11px;
-  --text-sm: 13px;
-  --text-base: 14px;
-  --text-md: 15px;
-  --text-lg: 18px;
-  --text-xl: 22px;
-  --text-2xl: 28px;
-  --text-3xl: 38px;
-  --text-4xl: 46px;
+  --text-xs: 10px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 19px;
+  --text-2xl: 24px;
+  --text-3xl: 31px;
+  --text-4xl: 38px;
 
   --leading-tight: 1.15;
   --leading-snug: 1.35;
@@ -28,165 +281,61 @@
   --tracking-eyebrow: 0.14em;
   --tracking-wide: 0.06em;
 
-  /* --- Spacing scale (4px base) ---------------------------------------- */
+  /* Spacing scale */
   --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
+  --space-2: 6px;
+  --space-3: 10px;
+  --space-4: 14px;
+  --space-5: 16px;
+  --space-6: 20px;
+  --space-8: 26px;
+  --space-10: 32px;
+  --space-12: 40px;
+  --space-16: 52px;
 
-  /* --- Radii ------------------------------------------------------------ */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  /* Radii */
+  --radius-sm: 5px;
+  --radius-md: 7px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
   --radius-pill: 999px;
 
-  /* --- Layout ----------------------------------------------------------- */
-  --sidebar-width: 264px;
-  --topbar-height: 64px;
+  /* Layout */
+  --sidebar-width: 236px;
+  --topbar-height: 56px;
   --page-max-width: 1360px;
 
-  /* --- Motion ----------------------------------------------------------- */
+  /* Motion */
   --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
   --duration-fast: 120ms;
   --duration: 180ms;
 }
 
 /* ==========================================================================
-   LIGHT theme — warm off-white paper, deep forest green accent
+   Derived from the handoff colours: elevation and the focus ring, which the
+   handoff does not spell out but every control needs.
    ========================================================================== */
 :root,
 [data-theme='light'] {
-  color-scheme: light;
-
-  --bg-page: #f4f3ee;
-  --bg-sidebar: #fbfaf6;
-  --bg-surface: #ffffff;
-  --bg-surface-subtle: #f7f6f1;
-  --bg-surface-hover: #efeee7;
-  --bg-overlay: rgba(31, 36, 29, 0.45);
-
-  --border: #e4e2d9;
-  --border-strong: #d2cfc3;
-
-  --text-primary: #1f241d;
-  --text-secondary: #5f665a;
-  --text-muted: #8e9488;
-
-  --accent: #2e4a33;
-  --accent-hover: #243b28;
-  --accent-contrast: #ffffff;
-  --accent-soft: #e7ebe0;
-  --accent-soft-text: #2e4a33;
-
-  --danger: #b3402c;
-  --danger-soft: #fbece8;
-  --warning: #b07a28;
-  --warning-soft: #f8f0e0;
-  --success: #3f7a4f;
-  --success-soft: #e7f0e7;
-
-  --course-green: #4e6b4c;
-  --course-purple: #9b85c4;
-  --course-amber: #c79a46;
-  --course-blue: #6e9ac4;
-
-  --shadow-sm: 0 1px 2px rgba(31, 36, 29, 0.05);
-  --shadow-md: 0 2px 8px rgba(31, 36, 29, 0.07);
-  --shadow-lg: 0 12px 32px rgba(31, 36, 29, 0.12);
-  --focus-ring: 0 0 0 3px rgba(46, 74, 51, 0.18);
+  --shadow-sm: 0 1px 2px var(--shadow-color);
+  --shadow-md: 0 2px 8px var(--shadow-color);
+  --shadow-lg: 0 12px 32px var(--shadow-color);
+  --focus-ring: 0 0 0 3px #216B4F2E;
 }
 
-/* ==========================================================================
-   CYBER theme (dark) — near-black, mint accent
-   ========================================================================== */
-[data-theme='cyber'] {
-  color-scheme: dark;
-
-  --bg-page: #0a0e0d;
-  --bg-sidebar: #070a09;
-  --bg-surface: #101614;
-  --bg-surface-subtle: #141b19;
-  --bg-surface-hover: #1a2320;
-  --bg-overlay: rgba(0, 0, 0, 0.65);
-
-  --border: #1f2a27;
-  --border-strong: #2c3936;
-
-  --text-primary: #e6ede9;
-  --text-secondary: #93a09b;
-  --text-muted: #6b7873;
-
-  --accent: #6fe0c0;
-  --accent-hover: #8ae9ce;
-  --accent-contrast: #06120e;
-  --accent-soft: #10241e;
-  --accent-soft-text: #6fe0c0;
-
-  --danger: #f0697d;
-  --danger-soft: #2a1418;
-  --warning: #e0b368;
-  --warning-soft: #241c10;
-  --success: #6fe0c0;
-  --success-soft: #10241e;
-
-  --course-green: #7fb48a;
-  --course-purple: #b49be0;
-  --course-amber: #e0bc72;
-  --course-blue: #86b4e0;
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
-  --focus-ring: 0 0 0 3px rgba(111, 224, 192, 0.22);
+[data-theme='cyber'],
+[data-theme='dark'] {
+  --shadow-sm: 0 1px 2px var(--shadow-color);
+  --shadow-md: 0 2px 10px var(--shadow-color);
+  --shadow-lg: 0 16px 40px var(--shadow-color);
+  --focus-ring: 0 0 0 3px #67E8D83D;
 }
 
-/* Respect OS preference until the user picks a theme explicitly. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    color-scheme: dark;
-
-    --bg-page: #0a0e0d;
-    --bg-sidebar: #070a09;
-    --bg-surface: #101614;
-    --bg-surface-subtle: #141b19;
-    --bg-surface-hover: #1a2320;
-    --bg-overlay: rgba(0, 0, 0, 0.65);
-
-    --border: #1f2a27;
-    --border-strong: #2c3936;
-
-    --text-primary: #e6ede9;
-    --text-secondary: #93a09b;
-    --text-muted: #6b7873;
-
-    --accent: #6fe0c0;
-    --accent-hover: #8ae9ce;
-    --accent-contrast: #06120e;
-    --accent-soft: #10241e;
-    --accent-soft-text: #6fe0c0;
-
-    --danger: #f0697d;
-    --danger-soft: #2a1418;
-    --warning: #e0b368;
-    --warning-soft: #241c10;
-    --success: #6fe0c0;
-    --success-soft: #10241e;
-
-    --course-green: #7fb48a;
-    --course-purple: #b49be0;
-    --course-amber: #e0bc72;
-    --course-blue: #86b4e0;
-
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
-    --focus-ring: 0 0 0 3px rgba(111, 224, 192, 0.22);
+    --shadow-sm: 0 1px 2px var(--shadow-color);
+    --shadow-md: 0 2px 10px var(--shadow-color);
+    --shadow-lg: 0 16px 40px var(--shadow-color);
+    --focus-ring: 0 0 0 3px #67E8D83D;
   }
 }

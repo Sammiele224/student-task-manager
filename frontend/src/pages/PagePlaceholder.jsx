@@ -18,14 +18,14 @@ export default function PagePlaceholder({ eyebrow, title, subtitle, stories, act
       />
 
       {/* <Card tone="outline" padding="lg">
-        <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-3)' }}>
+        <p style={{ color: 'var(--subtle)', marginBottom: 'var(--space-3)' }}>
           This page is a placeholder. Build it on a feature branch and open a PR.
         </p>
         <ul style={{ display: 'grid', gap: 'var(--space-2)' }}>
           {stories.map((story) => (
             <li
               key={story}
-              style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}
+              style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}
             >
               {story}
             </li>
