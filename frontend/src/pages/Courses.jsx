@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '../components/ui'
 import { CourseCard, AddCourseCard } from '../components/features/Courses/CourseCard'
@@ -24,6 +25,7 @@ export default function Courses() {
      from the shared task list. */
   const { tasks } = useTasks()
   const courseProgress = getCourseProgress(tasks)
+  const navigate = useNavigate()
 
   const [courses, setCourses] = useState([])
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -183,6 +185,7 @@ export default function Courses() {
                   key={course.id}
                   course={course}
                   progress={courseProgress.get(course.id)}
+                  onOpen={() => navigate(`/courses/${course.id}`)}
                   onEdit={() => setEditingCourse(course)}
                   onRemove={() =>
                     setCourseToDelete(course)

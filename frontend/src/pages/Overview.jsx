@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
   CalendarDays,
@@ -71,6 +71,7 @@ export default function Overview() {
 
   const stats = getDashboardStats(tasks)
   const courseProgress = useMemo(() => getCourseProgress(tasks), [tasks])
+  const navigate = useNavigate()
   const focusTasks = getFocusTasks(tasks)
   const comingUp = getUpcomingTasks(tasks, 3)
   const nextTask = comingUp[0] ?? null
@@ -191,6 +192,7 @@ export default function Overview() {
                     key={course.id}
                     course={course}
                     progress={courseProgress.get(course.id)}
+                    onOpen={() => navigate(`/courses/${course.id}`)}
                   />
                 ))}
               </div>
