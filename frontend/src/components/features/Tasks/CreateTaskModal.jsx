@@ -7,22 +7,23 @@ import { toDateInputValue } from './taskMeta'
  * The add-task dialog. Same form body as the edit dialog, without the status
  * field — a task nobody has started is always to-do.
  *
- * @param {string} dueDate  optional date to prefill, e.g. the day picked on the calendar
+ * @param {string} dueDate   optional date to prefill, e.g. the day picked on the calendar
+ * @param {number|string} courseId  optional course to preselect, e.g. on a course's own page
  * @param {Function} onCreate  receives the cleaned values; may reject
  */
-export function CreateTaskModal({ open, courses, dueDate, onClose, onCreate }) {
+export function CreateTaskModal({ open, courses, dueDate, courseId, onClose, onCreate }) {
   /* A fresh object each render would re-run the form's prefill effect and wipe
-     what is being typed, so this is tied to the one value that can change. */
+     what is being typed, so this is tied to the values that can change. */
   const initialValues = useMemo(
     () => ({
       title: '',
-      courseId: '',
+      courseId: courseId == null ? '' : String(courseId),
       dueDate: dueDate ? toDateInputValue(dueDate) : '',
       priority: 'medium',
       status: 'todo',
       description: '',
     }),
-    [dueDate]
+    [dueDate, courseId]
   )
 
   if (!open) return null

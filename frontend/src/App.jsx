@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/layout'
 import Overview from './pages/Overview'
 import Courses from './pages/Courses'
+import CourseDetail from './pages/CourseDetail'
 import Tasks from './pages/Tasks'
 import TaskDetail from './pages/TaskDetail'
 import Upcoming from './pages/Upcoming'
@@ -28,6 +29,8 @@ export default function App() {
           />
 
           <Route path="courses" element={<Courses />} />
+
+          <Route path="courses/:id" element={<CourseDetail />} />
 
           <Route path="tasks" element={<Tasks />} />
 

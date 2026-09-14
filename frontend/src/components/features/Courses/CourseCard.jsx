@@ -45,8 +45,29 @@ export function CourseCard({ course, progress, onOpen, onEdit, onRemove }) {
         onRemove?.(course)
     }
 
+    /* The card holds its own buttons, so it cannot be a <button> itself.
+       role + key handling give the keyboard the same way in as the mouse. */
+    const openProps = onOpen
+        ? {
+            role: 'button',
+            tabIndex: 0,
+            onClick: onOpen,
+            onKeyDown: (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onOpen()
+                }
+            },
+            'aria-label': `Open ${name}`,
+        }
+        : {}
+
     return (
-        <div className="course-card" onClick={onOpen} style={{ '--course-color': color }}>
+        <div
+            className={`course-card ${onOpen ? 'is-openable' : ''}`.trim()}
+            style={{ '--course-color': color }}
+            {...openProps}
+        >
             {/* cover */}
             <div className="course-card__cover">
                 <div

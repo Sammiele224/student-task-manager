@@ -26,6 +26,17 @@
   background: var(--neutral-bg);
 }
 
+/* Only a card that actually opens a course looks and behaves clickable. */
+.course-card.is-openable {
+  cursor: pointer;
+}
+
+.course-card.is-openable:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--course-color, var(--green));
+}
+
 /* No gutter of its own: the toolbar, the grid and the page title all sit on
    the same left edge, which PageContainer sets. A rule separates the header. */
 .courses-wrapper {
@@ -51,7 +62,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  cursor: pointer;
+  cursor: default;
   transition: border-color var(--duration) var(--ease),
     box-shadow var(--duration) var(--ease),
     transform var(--duration) var(--ease);
@@ -300,6 +311,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
+  cursor: pointer;
   min-height: 221px;
   width: 100%;
   background: var(--input);
