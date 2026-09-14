@@ -247,8 +247,8 @@
   bottom: calc(100% + 8px);
   right: 0;
   min-width: 176px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-1);
@@ -280,7 +280,7 @@
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--text-primary);
+  color: var(--ink);
   cursor: pointer;
   text-align: left;
   transition: background var(--duration-fast) var(--ease),
@@ -288,20 +288,20 @@
 }
 
 .sidebar__user-menu-item svg {
-  color: var(--text-secondary);
+  color: var(--subtle);
   transition: color var(--duration-fast) var(--ease);
 }
 
 .sidebar__user-menu-item:hover,
 .sidebar__user-menu-item:focus-visible {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
+  background: var(--neutral-bg);
+  color: var(--ink);
   outline: none;
 }
 
 .sidebar__user-menu-item:hover svg,
 .sidebar__user-menu-item:focus-visible svg {
-  color: var(--accent);
+  color: var(--green);
 }
 
 .sidebar__user-menu-item:focus-visible {
@@ -310,18 +310,18 @@
 
 /* hightlight sign in option */
 .sidebar__user-menu-item--primary {
-  background: var(--accent-soft);
-  color: var(--accent-soft-text);
+  background: var(--green-soft);
+  color: var(--green);
 }
 
 .sidebar__user-menu-item--primary:hover {
-  background: var(--accent-soft);
+  background: var(--green-soft);
   filter: brightness(0.97);
 }
 
 .sidebar__user-menu-divider {
   height: 1px;
-  background: var(--border);
+  background: var(--line);
   margin: var(--space-1) var(--space-2);
 }
 
