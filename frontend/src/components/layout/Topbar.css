@@ -72,10 +72,6 @@
   margin-left: auto;
 }
 
-.topbar__search {
-  width: 238px;
-}
-
 .topbar__date {
   font-size: var(--text-sm);
   color: var(--subtle);
@@ -105,7 +101,7 @@
     display: inline-flex;
   }
 
-  .topbar__search,
+  .global-search,
   .topbar__date {
     display: none;
   }

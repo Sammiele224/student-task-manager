@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Menu, Search } from 'lucide-react'
-import { Input } from '../ui'
+import { Menu } from 'lucide-react'
+import GlobalSearch from './GlobalSearch'
 import './Topbar.css'
 
 /**
@@ -47,15 +47,7 @@ export default function Topbar({ crumbs = [{ label: 'Overview' }], onMenuClick }
       </nav>
 
       <div className="topbar__right">
-        <div className="topbar__search">
-          <Input
-            type="search"
-            placeholder="Find an assignment..."
-            aria-label="Find an assignment"
-            icon={<Search />}
-            bare
-          />
-        </div>
+        <GlobalSearch />
         <span className="topbar__date">{today}</span>
         <span className="topbar__avatar" aria-hidden="true">
           AM
