@@ -62,6 +62,33 @@ Then, run the SQL script to seed data:
 ```bash
 mysql -u root -p < backend/db/SeedData.sql
 ```
+### Database made before users were added? Run the update once
+
+`schema.sql` only creates tables that don't exist yet. It can't add the new
+owner column to a `courses` table you already have, so an existing database
+needs this one-time update. It keeps your courses and tasks, and gives them all
+to the demo user. Run it from the project folder:
+
+**Docker — Mac, Linux, Git Bash or Command Prompt:**
+
+```bash
+docker exec -i capstone_mysql mysql -uroot -ppassword < backend/db/migrations/001-add-users.sql
+```
+
+**Docker — PowerShell** (PowerShell has no `<`, so the file is piped in):
+
+```powershell
+Get-Content -Raw backend/db/migrations/001-add-users.sql | docker exec -i capstone_mysql mysql -uroot -ppassword
+```
+
+**Without Docker:**
+
+```bash
+mysql -u root -p < backend/db/migrations/001-add-users.sql
+```
+
+Running it twice is safe. Restart the backend afterwards.
+
 ### 3. Start the backend 
 
 ```bash
@@ -213,7 +240,8 @@ student-task-manager/
 └── backend/
     ├── db/
     │   ├── schema.sql       Tables (run this first)
-    │   └── SeedData.sql     Demo data
+    │   ├── SeedData.sql     Demo data
+    │   └── migrations/      One-time updates for databases made before a change
     └── src/
         ├── routes/          courses.js, tasks.js, stats.js
         ├── server.js        Express app — add routers here
@@ -372,9 +400,14 @@ Before opening a pull request:
 
 ## Data model
 
-One course has many tasks.
+One user has many courses, and one course has many tasks. A task belongs to a
+user through its course, so `tasks` has no `user_id` of its own.
 
-**courses** — `id`, `name`, `code` *(unique)*, `color`, `created_at`
+**users** — `id`, `name`, `username` *(unique)*, `email` *(unique)*,
+`password_hash`, `avatar_url`, `created_at`, `updated_at`
+
+**courses** — `id`, `user_id` *(FK → users.id)*, `name`, `code` *(unique per
+user)*, `color`, `created_at`
 
 **tasks** — `id`, `course_id` *(FK → courses.id)*, `title`, `description`,
 `due_date`, `priority` *(low | medium | high)*, `status` *(todo | in_progress |
@@ -383,10 +416,24 @@ done)*, `created_at`, `completed_at`
 Two rules are enforced by the database itself, so they hold even if an
 application-level check is missed:
 
-- `courses.code` is `UNIQUE` — a duplicate code fails.
+- `(courses.user_id, courses.code)` is `UNIQUE` — one student can't have the
+  same code twice, but two students can each have a CS201.
+- `users.email` and `users.username` are `UNIQUE`. Email comparison ignores
+  case, so `Alex@school.edu` and `alex@school.edu` are the same account.
 - `tasks.course_id` uses `ON DELETE RESTRICT` — deleting a course that still has
   tasks fails rather than silently destroying them. Catch the error and return a
   clear message.
+- `courses.user_id` uses `ON DELETE RESTRICT` too — a user who still has courses
+  can't be deleted.
+
+> **The database doesn't keep users apart — the API has to.** Every query for
+> courses must filter on the signed-in user's `courses.user_id`, and every query
+> for tasks must join their course and filter the same way. Nothing stops one
+> user's request reading another user's rows if a query forgets.
+
+`users.password_hash` holds a **bcrypt** hash, never the password itself. The
+demo data creates one account for development: `alex@school.edu` with password
+`password123`. It owns every demo course.
 
 > Validation such as "due date cannot be in the past" belongs in the
 > `POST /api/v1/tasks` handler, not the database — `SeedData.sql` inserts
@@ -402,6 +449,14 @@ that `DB_USER` / `DB_PASSWORD` match your local install.
 
 **`ER_BAD_DB_ERROR: Unknown database`**
 You haven't created the schema yet — run step 2 of Getting started.
+
+**`Unknown column 'user_id'` or `Table 'student_task_manager.users' doesn't exist`**
+Your database was made before users were added. Run the one-time update in
+Getting started.
+
+**`Field 'user_id' doesn't have a default value` when creating a course**
+Every course needs an owner, and the request didn't send one. The courses API
+has to insert the signed-in user's id.
 
 **Frontend calls return 404 or HTML instead of JSON**
 The backend isn't running — start it on port 4000, where the Vite proxy expects

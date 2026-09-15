@@ -4,8 +4,11 @@
 --
 -- Requires: MySQL 8.0.16+
 --
--- Core relationship:
---   courses (1) ----< tasks (N)
+-- Core relationships:
+--   users (1) ----< courses (N) ----< tasks (N)
+--
+-- A task belongs to a user through its course, so tasks carry no user_id of
+-- their own: a second copy could only ever disagree with the course's owner.
 -- =============================================================================
 
 CREATE DATABASE IF NOT EXISTS student_task_manager
@@ -16,11 +19,67 @@ USE student_task_manager;
 
 
 -- =============================================================================
+-- USERS
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+
+    -- Display name, e.g. "Alex Morgan".
+    name VARCHAR(120) NOT NULL,
+
+    username VARCHAR(50) NOT NULL,
+
+    email VARCHAR(255) NOT NULL,
+
+    -- A bcrypt hash, never the password itself.
+    password_hash VARCHAR(255) NOT NULL,
+
+    avatar_url VARCHAR(500) NULL,
+
+    created_at DATETIME
+        NOT NULL
+        DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at DATETIME
+        NOT NULL
+        DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+
+    -- One account per email and per username. The collation ignores case, so
+    -- Alex@school.edu and alex@school.edu count as the same address.
+    UNIQUE KEY uq_users_email (email),
+
+    UNIQUE KEY uq_users_username (username),
+
+    -- Prevent blank values such as '' or '   '.
+    CONSTRAINT chk_users_name
+        CHECK (CHAR_LENGTH(TRIM(name)) > 0),
+
+    CONSTRAINT chk_users_username
+        CHECK (CHAR_LENGTH(TRIM(username)) > 0),
+
+    -- At least one character either side of an @. Full validation is the API's.
+    CONSTRAINT chk_users_email
+        CHECK (email LIKE '_%@_%'),
+
+    CONSTRAINT chk_users_password_hash
+        CHECK (CHAR_LENGTH(password_hash) > 0)
+
+) ENGINE = InnoDB;
+
+
+-- =============================================================================
 -- COURSES
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS courses (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+
+    -- The student this course belongs to.
+    user_id INT UNSIGNED NOT NULL,
 
     name VARCHAR(120) NOT NULL,
 
@@ -34,8 +93,9 @@ CREATE TABLE IF NOT EXISTS courses (
 
     PRIMARY KEY (id),
 
-    -- A course code uniquely identifies a course.
-    UNIQUE KEY uq_courses_code (code),
+    -- A code is unique within one student's courses, so two students can each
+    -- have their own CS201. user_id leads, so this also indexes the foreign key.
+    UNIQUE KEY uq_courses_user_code (user_id, code),
 
     -- Prevent blank values such as '' or '   '.
     CONSTRAINT chk_courses_name
@@ -45,7 +105,19 @@ CREATE TABLE IF NOT EXISTS courses (
         CHECK (CHAR_LENGTH(TRIM(code)) > 0),
 
     CONSTRAINT chk_courses_color
-        CHECK (CHAR_LENGTH(TRIM(color)) > 0)
+        CHECK (CHAR_LENGTH(TRIM(color)) > 0),
+
+    -- -------------------------------------------------------------------------
+    -- Relationships
+    -- -------------------------------------------------------------------------
+
+    -- A user who still has courses can't be deleted, the same rule tasks use
+    -- for their course.
+    CONSTRAINT fk_courses_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE RESTRICT
+        ON UPDATE RESTRICT
 
 ) ENGINE = InnoDB;
 
