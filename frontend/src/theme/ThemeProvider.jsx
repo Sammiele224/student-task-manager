@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { STORAGE_KEY, ThemeContext } from './theme-context'
 
 function readInitialTheme() {
@@ -14,12 +14,23 @@ function readInitialTheme() {
     : 'light'
 }
 
-/** Applies the theme to <html data-theme> and remembers the choice. */
+/**
+ * Applies the theme to <html data-theme> and remembers the choice.
+ *
+ * A page can override what is shown with useForcedTheme — the sign-in screen
+ * holds light. The override is never saved: `theme` stays the student's own
+ * choice, and only that goes to storage.
+ */
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(readInitialTheme)
+  const [forcedTheme, setForcedTheme] = useState(null)
+
+  /* Layout effect, so a forced theme is on the page before it paints. */
+  useLayoutEffect(() => {
+    document.documentElement.setAttribute('data-theme', forcedTheme ?? theme)
+  }, [theme, forcedTheme])
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
     try {
       window.localStorage.setItem(STORAGE_KEY, theme)
     } catch {
@@ -30,7 +41,7 @@ export function ThemeProvider({ children }) {
   const toggleTheme = () => setTheme((t) => (t === 'light' ? 'cyber' : 'light'))
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, setForcedTheme }}>
       {children}
     </ThemeContext.Provider>
   )
