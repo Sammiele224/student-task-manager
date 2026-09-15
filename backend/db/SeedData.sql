@@ -3,9 +3,13 @@
 -- Source: Seed Data - The Last of Us.xlsx
 --
 -- Safe to re-run:
---   - courses are protected by UNIQUE(code) + INSERT IGNORE
+--   - the demo user is protected by UNIQUE(email) + INSERT IGNORE
+--   - courses are protected by UNIQUE(user_id, code) + INSERT IGNORE
 --   - tasks are inserted only when the same title does not already exist
 --     within the same course
+--
+-- Every demo course belongs to the demo user, alex@school.edu. Its password is
+-- password123, stored as a bcrypt hash - for development only.
 --
 -- Expected schema: student_task_manager
 -- =============================================================================
@@ -13,17 +17,30 @@
 USE student_task_manager;
 
 -- -----------------------------------------------------------------------------
+-- Demo user (1 row) - owns every demo course
+-- -----------------------------------------------------------------------------
+INSERT IGNORE INTO users (name, username, email, password_hash, created_at)
+VALUES
+  -- password_hash is bcrypt, cost 10, of 'password123'.
+  ('Alex Morgan', 'alexmorgan', 'alex@school.edu',
+   '$2b$10$/KzKPuS/FVzdZdeUMM/MUON9ihR9D2KJFEg/tigz5Kd5EW9h/aOMe',
+   '2026-09-01 00:00:00');
+
+-- Looked up rather than assumed, so it holds whatever id the row was given.
+SET @demo_user_id = (SELECT id FROM users WHERE email = 'alex@school.edu');
+
+-- -----------------------------------------------------------------------------
 -- Courses (5 rows)
 -- -----------------------------------------------------------------------------
-INSERT IGNORE INTO courses (name, code, color, created_at)
+INSERT IGNORE INTO courses (user_id, name, code, color, created_at)
 VALUES
   -- color holds a palette name, not a hex value: the column is VARCHAR(20)
   -- and defaults to 'green'. The frontend maps each name to a design token.
-  ('Data Structures and Algorithms', 'CS201', 'sage', '2026-09-01 00:00:00'),
-  ('Database Systems', 'CS202', 'green', '2026-09-01 00:00:00'),
-  ('Computer Networks', 'CS301', 'teal', '2026-09-01 00:00:00'),
-  ('Web Development', 'CS302', 'blue', '2026-09-01 00:00:00'),
-  ('Discrete Mathematics', 'MA201', 'sage', '2026-09-01 00:00:00');
+  (@demo_user_id, 'Data Structures and Algorithms', 'CS201', 'sage', '2026-09-01 00:00:00'),
+  (@demo_user_id, 'Database Systems', 'CS202', 'green', '2026-09-01 00:00:00'),
+  (@demo_user_id, 'Computer Networks', 'CS301', 'teal', '2026-09-01 00:00:00'),
+  (@demo_user_id, 'Web Development', 'CS302', 'blue', '2026-09-01 00:00:00'),
+  (@demo_user_id, 'Discrete Mathematics', 'MA201', 'sage', '2026-09-01 00:00:00');
 
 -- -----------------------------------------------------------------------------
 -- Temporary staging table for task seed data
@@ -407,8 +424,9 @@ VALUES
     '2026-09-01 00:00:00'
   );
 
--- Insert seed tasks by resolving the foreign key from courses.code.
--- NOT EXISTS prevents duplicate seed tasks on repeated runs.
+-- Insert seed tasks by resolving the foreign key from the demo user's course
+-- with that code. Codes are only unique per user, so the owner is part of the
+-- match. NOT EXISTS prevents duplicate seed tasks on repeated runs.
 INSERT INTO tasks (
   course_id,
   title,
@@ -431,6 +449,7 @@ SELECT
 FROM seed_tasks AS s
 JOIN courses AS c
   ON c.code = s.course_code
+ AND c.user_id = @demo_user_id
 WHERE NOT EXISTS (
   SELECT 1
   FROM tasks AS t
