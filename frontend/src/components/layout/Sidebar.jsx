@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, NavLink } from 'react-router-dom'
 import {
   BookOpen,
   CalendarDays,
@@ -7,13 +7,12 @@ import {
   ExternalLink,
   LayoutGrid,
   ListChecks,
-  LogIn,
   Settings,
-  User,
 } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 import Logo from './Logo'
 import GuidancePanel from './GuidancePanel'
+import UserMenu from './UserMenu'
 import { useTasks } from '../features/Tasks/TaskContext'
 import { useBackendStatus } from '../../hooks/useBackendStatus'
 import './Sidebar.css'
@@ -35,29 +34,9 @@ const NAV_ITEMS = [
 
 export default function Sidebar({ open = false, onNavigate }) {
   const { completedCount, percentDone } = useTasks()
-  const navigate = useNavigate()
 
-  const [menuOpen, setMenuOpen] = useState(false)
   const [guidanceOpen, setGuidanceOpen] = useState(false)
-  const menuRef = useRef(null)
   const backend = useBackendStatus()
-
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setMenuOpen(false)
-      }
-    }
-    function handleEscape(e) {
-      if (e.key === 'Escape') setMenuOpen(false)
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    document.addEventListener('keydown', handleEscape)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('keydown', handleEscape)
-    }
-  }, [])
 
   return (
     <aside className={`sidebar ${open ? 'is-open' : ''}`}>
@@ -123,7 +102,21 @@ export default function Sidebar({ open = false, onNavigate }) {
           <ExternalLink size={14} aria-hidden="true" />
         </button>
 
-        <div className="sidebar__user" ref={menuRef}>
+        {/* The same account menu the topbar avatar opens. */}
+        <UserMenu
+          className="sidebar__user"
+          placement="up"
+          renderTrigger={(triggerProps) => (
+            <button
+              type="button"
+              className="sidebar__settings"
+              aria-label="Settings"
+              {...triggerProps}
+            >
+              <Settings size={16} />
+            </button>
+          )}
+        >
           <span className="sidebar__avatar" aria-hidden="true">
             AM
           </span>
@@ -131,44 +124,7 @@ export default function Sidebar({ open = false, onNavigate }) {
             <span className="sidebar__user-name">Alex Morgan</span>
             <span className="sidebar__user-sub">Personal workspace</span>
           </div>
-          <button
-            type="button"
-            className="sidebar__settings"
-            aria-label="Settings"
-            aria-haspopup="true"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((v) => !v)}
-          >
-            <Settings size={16} />
-          </button>
-
-          {menuOpen && (
-            <ul className="sidebar__user-menu" role="menu">
-              <li role="none">
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="sidebar__user-menu-item"
-                  onClick={() => navigate('/signin')}
-                >
-                  <LogIn size={16} />
-                  <span>Sign in</span>
-                </button>
-              </li>
-              <li role="none">
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="sidebar__user-menu-item"
-                  onClick={() => navigate('/profile')}
-                >
-                  <User size={16} />
-                  <span>Profile</span>
-                </button>
-              </li>
-            </ul>
-          )}
-        </div>
+        </UserMenu>
       </div>
       <GuidancePanel open={guidanceOpen} onClose={() => setGuidanceOpen(false)} />
     </aside>

@@ -78,18 +78,34 @@
   white-space: nowrap;
 }
 
+/* A button now: it opens the account menu. */
 .topbar__avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 26px;
   height: 26px;
+  padding: 0;
+  border: none;
   border-radius: 50%;
   background: var(--green-soft);
   color: var(--green);
+  font-family: var(--font-sans);
   font-size: var(--text-xs);
   font-weight: 600;
   flex-shrink: 0;
+  cursor: pointer;
+  transition: box-shadow var(--duration-fast) var(--ease);
+}
+
+.topbar__avatar:hover,
+.topbar__avatar[aria-expanded='true'] {
+  box-shadow: 0 0 0 2px var(--line-strong);
+}
+
+.topbar__avatar:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 @media (max-width: 900px) {

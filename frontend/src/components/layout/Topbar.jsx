@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 import GlobalSearch from './GlobalSearch'
+import UserMenu from './UserMenu'
 import './Topbar.css'
 
 /**
@@ -49,9 +50,20 @@ export default function Topbar({ crumbs = [{ label: 'Overview' }], onMenuClick }
       <div className="topbar__right">
         <GlobalSearch />
         <span className="topbar__date">{today}</span>
-        <span className="topbar__avatar" aria-hidden="true">
-          AM
-        </span>
+        {/* Opens the same account menu as the sidebar's settings gear. */}
+        <UserMenu
+          placement="down"
+          renderTrigger={(triggerProps) => (
+            <button
+              type="button"
+              className="topbar__avatar"
+              aria-label="Account menu for Alex Morgan"
+              {...triggerProps}
+            >
+              AM
+            </button>
+          )}
+        />
       </div>
     </header>
   )
