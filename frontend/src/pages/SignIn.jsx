@@ -1,9 +1,14 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
+import { useForcedTheme } from '../theme/theme-context'
 import '../styles/features/User/SignIn.css'
 
 export default function SignIn() {
+  /* The sign-in screen is designed for the light palette only, so it holds
+     light while it is open and hands the saved theme back on the way out. */
+  useForcedTheme('light')
+
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
