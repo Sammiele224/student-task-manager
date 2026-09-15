@@ -8,8 +8,8 @@
 --   - tasks are inserted only when the same title does not already exist
 --     within the same course
 --
--- Every demo course belongs to the demo user, alex@school.edu. Its password is
--- password123, stored as a bcrypt hash - for development only.
+-- The primary demo course set belongs to alex@school.edu. A second, small
+-- dataset is included for ownership testing.
 --
 -- Expected schema: student_task_manager
 -- =============================================================================
@@ -17,17 +17,22 @@
 USE student_task_manager;
 
 -- -----------------------------------------------------------------------------
--- Demo user (1 row) - owns every demo course
+-- Demo users
 -- -----------------------------------------------------------------------------
 INSERT IGNORE INTO users (name, username, email, password_hash, created_at)
 VALUES
   -- password_hash is bcrypt, cost 10, of 'password123'.
   ('Alex Morgan', 'alexmorgan', 'alex@school.edu',
    '$2b$10$/KzKPuS/FVzdZdeUMM/MUON9ihR9D2KJFEg/tigz5Kd5EW9h/aOMe',
+  '2026-09-01 00:00:00'),
+  -- password_hash is bcrypt, cost 10, of 'Student123!'.
+  ('Student Two', 'studenttwo', 'student2@example.com',
+  '$2b$10$/cT7DdVayiJfeSoDNEn1D.mpK5uwZ0g9SXISU88wBJOfLyGs1M6SS',
    '2026-09-01 00:00:00');
 
 -- Looked up rather than assumed, so it holds whatever id the row was given.
 SET @demo_user_id = (SELECT id FROM users WHERE email = 'alex@school.edu');
+SET @second_user_id = (SELECT id FROM users WHERE email = 'student2@example.com');
 
 -- -----------------------------------------------------------------------------
 -- Courses (5 rows)
@@ -41,6 +46,12 @@ VALUES
   (@demo_user_id, 'Computer Networks', 'CS301', 'teal', '2026-09-01 00:00:00'),
   (@demo_user_id, 'Web Development', 'CS302', 'blue', '2026-09-01 00:00:00'),
   (@demo_user_id, 'Discrete Mathematics', 'MA201', 'sage', '2026-09-01 00:00:00');
+
+-- One small independent course for ownership testing. Its code intentionally
+-- matches a primary user's course to exercise per-user uniqueness.
+INSERT IGNORE INTO courses (user_id, name, code, color, created_at)
+VALUES
+  (@second_user_id, 'Algorithms Practice Lab', 'CS201', 'orange', '2026-09-01 00:00:00');
 
 -- -----------------------------------------------------------------------------
 -- Temporary staging table for task seed data
@@ -456,5 +467,57 @@ WHERE NOT EXISTS (
   WHERE t.course_id = c.id
     AND t.title = s.title
 );
+
+  -- Two tasks for the second user. They are kept separate from the primary
+  -- user's staging data so the original demo output remains unchanged.
+  INSERT INTO tasks (
+    course_id,
+    title,
+    description,
+    due_date,
+    priority,
+    status,
+    created_at,
+    completed_at
+  )
+  SELECT
+    c.id,
+    s.title,
+    s.description,
+    s.due_date,
+    s.priority,
+    s.status,
+    s.created_at,
+    s.completed_at
+  FROM (
+    SELECT
+      'CS201' AS course_code,
+      'Practice Graph Traversal' AS title,
+      'Ownership test task: Practice Graph Traversal' AS description,
+      '2026-09-18' AS due_date,
+      'medium' AS priority,
+      'todo' AS status,
+      '2026-09-01 00:00:00' AS created_at,
+      NULL AS completed_at
+    UNION ALL
+    SELECT
+      'CS201',
+      'Review Sorting Algorithms',
+      'Ownership test task: Review Sorting Algorithms',
+      '2026-09-20',
+      'high',
+      'in_progress',
+      '2026-09-01 00:00:00',
+      NULL
+  ) AS s
+  JOIN courses AS c
+    ON c.code = s.course_code
+   AND c.user_id = @second_user_id
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM tasks AS t
+    WHERE t.course_id = c.id
+      AND t.title = s.title
+  );
 
 DROP TEMPORARY TABLE seed_tasks;
