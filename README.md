@@ -9,10 +9,13 @@ this week.
 ## Contents
 
 - [Tech stack](#tech-stack)
+- [Architecture](#architecture)
 - [Getting started](#getting-started)
-- [API endpoints](#api-endpoints)
+- [API design](#api-design)
 - [Frontend routes](#frontend-routes)
 - [Project structure](#project-structure)
+- [Frontend structure](#frontend-structure)
+- [Backend structure](#backend-structure)
 - [The shared design system](#the-shared-design-system)
 - [Branching](#branching)
 - [Data model](#data-model)
@@ -30,6 +33,53 @@ this week.
 | Icons    | lucide-react                          |
 | Backend  | Node.js + Express                     |
 | Database | MySQL 8 (`mysql2` driver)             |
+
+---
+
+## Architecture
+
+Three tiers, one direction. The browser only ever talks to the Express API, and
+only the API talks to MySQL.
+
+```mermaid
+flowchart LR
+    subgraph Browser["Browser — React 18 + Vite (port 5173)"]
+        Pages["Pages<br/>Overview · Courses · Tasks<br/>Upcoming · Calendar · Detail"]
+        Ctx["TasksProvider<br/>(React Context)<br/>tasks · courses · loading · error"]
+        Api["src/api<br/>TaskApi.js · CourseApi.js"]
+        Pages -- "useTasks()" --> Ctx
+        Ctx --> Api
+        Pages -. "Courses page only" .-> Api
+    end
+
+    Proxy["Vite dev proxy<br/>/api → :4000"]
+
+    subgraph Server["Node.js + Express (port 4000)"]
+        MW["cors · express.json()"]
+        Routes["Routers<br/>/api/v1/courses<br/>/api/v1/tasks<br/>/api/v1/stats<br/>/api/health"]
+        Err["404 handler<br/>error handler"]
+        Pool["db.js<br/>mysql2 pool (10 conns)"]
+        MW --> Routes --> Pool
+        Routes -- "next(error)" --> Err
+    end
+
+    DB[("MySQL 8<br/>student_task_manager<br/>users · courses · tasks")]
+
+    Api -- "fetch JSON" --> Proxy --> MW
+    Pool -- "parameterised SQL" --> DB
+```
+
+| Tier     | Owns                                                                  | Never does                         |
+| -------- | --------------------------------------------------------------------- | ---------------------------------- |
+| Frontend | Rendering, the in-memory task/course list, filtering, sorting, derived stats | Talks to MySQL, trusts its own validation |
+| API      | Input validation, SQL, the completion timestamp, mapping DB errors to HTTP | Renders HTML, holds session state  |
+| Database | Relationships, uniqueness, `CHECK` rules, `ON DELETE RESTRICT`         | Business rules that need "today"   |
+
+**Why this shape.** Every rule that must never break (a course code is unique per
+user, a done task has a completion time, a course with tasks can't vanish) lives
+in the database, so a bug in the API can't violate it. Rules that need context
+("due date can't be in the past") live in the API. The frontend only ever
+decides how things look.
 
 ---
 
@@ -60,8 +110,35 @@ re-run — every statement uses `IF NOT EXISTS`.
 Then, run the SQL script to seed data:
 
 ```bash
-mysql -u root -p < backend/db/seed.sql
+mysql -u root -p < backend/db/SeedData.sql
 ```
+### Database made before users were added? Run the update once
+
+`schema.sql` only creates tables that don't exist yet. It can't add the new
+owner column to a `courses` table you already have, so an existing database
+needs this one-time update. It keeps your courses and tasks, and gives them all
+to the demo user. Run it from the project folder:
+
+**Docker — Mac, Linux, Git Bash or Command Prompt:**
+
+```bash
+docker exec -i capstone_mysql mysql -uroot -ppassword < backend/db/migrations/001-add-users.sql
+```
+
+**Docker — PowerShell** (PowerShell has no `<`, so the file is piped in):
+
+```powershell
+Get-Content -Raw backend/db/migrations/001-add-users.sql | docker exec -i capstone_mysql mysql -uroot -ppassword
+```
+
+**Without Docker:**
+
+```bash
+mysql -u root -p < backend/db/migrations/001-add-users.sql
+```
+
+Running it twice is safe. Restart the backend afterwards.
+
 ### 3. Start the backend 
 
 ```bash
@@ -89,7 +166,12 @@ npm run dev               # http://localhost:5173
 ```
 
 Vite proxies every `/api/*` request to the backend on port 4000, so frontend
-code just calls `fetch('/api/courses')` — no host, no CORS handling.
+code just calls `fetch('/api/v1/courses')` — no host, no CORS handling.
+
+> One file still breaks this: `src/api/CourseApi.js` hard-codes
+> `http://localhost:4000`, so it bypasses the proxy and leans on the backend's
+> CORS allowance. It works locally and breaks anywhere else. New code should use
+> a relative path, the way `TaskApi.js` does.
 
 ### Commands
 
@@ -103,25 +185,77 @@ code just calls `fetch('/api/courses')` — no host, no CORS handling.
 
 ---
 
-## API endpoints
+## API design
 
+REST over JSON. Resources are plural nouns, the HTTP verb is the action, and
+everything is mounted under **`/api/v1`** so a breaking change can ship as `v2`
+beside it. `/api/health` is the one exception — it sits outside the version
+prefix.
+
+### Inventory
+
+| Method   | Path                          | Purpose                                   | Body                                                      | Success | Errors |
+| -------- | ----------------------------- | ----------------------------------------- | --------------------------------------------------------- | ------- | ------ |
+| `GET`    | `/api/v1/courses`             | List courses with `taskCount` + `completedTaskCount` | —                                              | 200     | 500    |
+| `POST`   | `/api/v1/courses`             | Create a course                           | `name`\*, `code`\*, `color`                               | 201 + course | 400 missing field, 409 duplicate code |
+| `PUT`    | `/api/v1/courses/:id`         | Replace a course                          | `name`\*, `code`\*, `color`\*                             | 200 + course | 400, 404, 409 |
+| `DELETE` | `/api/v1/courses/:id`         | Delete a course                           | —                                                         | 200     | 400 still has tasks, 404 |
+| `GET`    | `/api/v1/tasks`               | List tasks joined with their course       | query: `search`, `courseId`, `status`, `priority`, `sort` (`dueDate`\|`priority`\|`createdAt`), `order` (`asc`\|`desc`) | 200 | 500 |
+| `GET`    | `/api/v1/tasks/:id`           | One task                                  | —                                                         | 200     | 404    |
+| `POST`   | `/api/v1/tasks`               | Create a task                             | `courseId`\*, `title`\*, `dueDate`\*, `description`, `priority`, `status` | 201 + `{id,title,status}` | 400 missing field or unknown course |
+| `PUT`    | `/api/v1/tasks/:id`           | Replace a task                            | all six fields required                                   | 200 + message | 400, 404 |
+| `PATCH`  | `/api/v1/tasks/:id/status`    | Change status only                        | `status`\*                                                | 200 + message | 400 invalid status, 404 |
+| `DELETE` | `/api/v1/tasks/:id`           | Delete a task                             | —                                                         | 200     | 404    |
+| `GET`    | `/api/v1/stats`               | Dashboard numbers                         | —                                                         | 200     | 500    |
+| `GET`    | `/api/health`                 | Server + database check                   | —                                                         | 200     | 503 database unreachable |
+
+\* required
+
+### Design decisions
+
+- **`PATCH /tasks/:id/status` exists beside `PUT`.** Ticking a checkbox is the
+  most common write in the app. A dedicated endpoint means the client sends one
+  field instead of re-sending the whole task, and the server alone decides the
+  completion timestamp.
+- **The server owns `completed_at`.** Both `PUT` and `PATCH` set it with the same
+  SQL `CASE`: stamped the first time a task becomes `done`, kept if it is already
+  done, cleared when it leaves `done`. The client never sends it.
+- **Task reads join the course.** `courseName`, `courseCode` and `courseColor`
+  arrive on every task, so a task row can render without a second request.
+- **`isOverdue` is computed in SQL** (`due_date < CURDATE() AND status != 'done'`)
+  so every client gets the same answer.
+- **Database errors become HTTP errors.** `ER_DUP_ENTRY` → 409,
+  `ER_ROW_IS_REFERENCED_2` → 400 with the number of blocking tasks,
+  `ER_NO_REFERENCED_ROW_2` → 400 "courseId does not exist". Anything else goes
+  to the error handler as a 500.
+
+### Example: create a task
+
+```http
+POST /api/v1/tasks
+Content-Type: application/json
+
+{ "courseId": 2, "title": "Lab report 3", "dueDate": "2026-09-22",
+  "priority": "high", "description": "Sections 1–4" }
 ```
-GET    /api/courses                list courses
-POST   /api/courses                create course
-PUT    /api/courses/:id            update course
-DELETE /api/courses/:id            delete course
 
-GET    /api/tasks                  list tasks
-                                   ?search= &courseId= &status= &priority= &sort=dueDate
-POST   /api/tasks                  create task
-GET    /api/tasks/:id              one task
-PUT    /api/tasks/:id              update task
-DELETE /api/tasks/:id              delete task
-PATCH  /api/tasks/:id/status       change status only
-
-GET    /api/stats                  dashboard numbers
-GET    /api/health                 server + database check
+```json
+201 Created
+{ "success": true, "data": { "id": 41, "title": "Lab report 3", "status": "todo" } }
 ```
+
+### Response envelope
+
+Every route under `/api/v1` wraps its payload:
+
+```json
+{ "success": true, "data": [ ... ] }
+{ "success": true, "message": "Task updated successfully" }
+{ "success": false, "message": "Course not found." }
+```
+
+The two server-level handlers are the exception — an unmatched path and an
+unhandled throw both answer `{ "error": "..." }`, without `success`.
 
 ### Conventions
 
@@ -131,19 +265,23 @@ GET    /api/health                 server + database check
 | **Field names**   | `camelCase` in JSON (`courseId`, `dueDate`), `snake_case` in SQL |
 | **Priority**      | `"low"` \| `"medium"` \| `"high"`                                |
 | **Status**        | `"todo"` \| `"in_progress"` \| `"done"`                          |
-| **Errors**        | Non-2xx with `{ "error": "A human-readable message" }`           |
+| **Errors**        | Non-2xx with `{ "success": false, "message": "..." }` from a route; `{ "error": "..." }` from the server's 404 and error handlers |
 | **Overdue**       | `due_date < today AND status != 'done'`                          |
-| **Due this week** | `due_date` within the next 7 days, inclusive of today            |
+| **Due this week** | `due_date` in the current Monday–Sunday week and `status != 'done'` (`YEARWEEK(…, 1)`) |
+| **Upcoming**      | Frontend only: `due_date` from today to 7 days ahead, not done  |
 
-### `GET /api/stats` response shape
+### `GET /api/v1/stats` response shape
 
 ```json
 {
-  "totalTasks": 35,
-  "completedTasks": 22,
-  "overdueTasks": 3,
-  "dueThisWeek": 8,
-  "completionRate": 62
+  "success": true,
+  "data": {
+    "totalTasks": 35,
+    "completedCount": 22,
+    "overdueCount": 3,
+    "dueThisWeekCount": 8,
+    "completionRate": 62
+  }
 }
 ```
 
@@ -160,6 +298,9 @@ GET    /api/health                 server + database check
 | `/tasks/:id` | Task detail |
 | `/upcoming`  | Upcoming    |
 | `/calendar`  | Calendar    |
+| `/profile`   | Profile     |
+| `/signin`    | Sign in — renders outside `AppLayout`, so no sidebar or topbar |
+| anything else | Not found  |
 
 ---
 
@@ -169,11 +310,14 @@ GET    /api/health                 server + database check
 student-task-manager/
 ├── frontend/
 │   └── src/
+│       ├── api/             CourseApi.js, TaskApi.js — every fetch lives here
 │       ├── components/
-│       │   ├── ui/          Button, Input, Select, Card, Badge  ← reuse these
-│       │   └── layout/      AppLayout, Sidebar, Topbar, PageContainer, PageHeader
+│       │   ├── ui/          Button, IconButton, Input, Select, Card, Badge  ← reuse these
+│       │   ├── layout/      AppLayout, Sidebar, Topbar, PageContainer, PageHeader
+│       │   └── features/    Courses/, Tasks/, Calendar/, Overview/ — page-specific parts
 │       ├── pages/           One file per route
-│       ├── styles/          tokens.css (colours, type, spacing) + global.css
+│       ├── hooks/           Shared hooks (useClickOutside)
+│       ├── styles/          tokens.css + global.css, then features/ per area
 │       ├── theme/           Light / Cyber theme provider
 │       ├── App.jsx          Route table
 │       └── main.jsx         Entry point
@@ -181,10 +325,189 @@ student-task-manager/
 └── backend/
     ├── db/
     │   ├── schema.sql       Tables (run this first)
-    │   └── seed.sql         Demo data
+    │   ├── SeedData.sql     Demo data
+    │   └── migrations/      One-time updates for databases made before a change
     └── src/
+        ├── routes/          courses.js, tasks.js, stats.js
         ├── server.js        Express app — add routers here
         └── db.js            Shared MySQL connection pool
+```
+
+---
+
+## Frontend structure
+
+### Layers
+
+```
+main.jsx            StrictMode → ThemeProvider → BrowserRouter → App
+  App.jsx           TasksProvider wraps every route
+    pages/          One component per route. Owns modal/dialog state only.
+    components/
+      features/     Domain parts: TaskListPanel, TaskRow, CourseCard, MonthGrid…
+      layout/       App shell: AppLayout, Sidebar, Topbar, GlobalSearch, PageHeader
+      ui/           Design system: Button, Input, Select, Card, Badge, Modal…
+    api/            The only files that call fetch()
+    hooks/          useBackendStatus, useClickOutside
+    theme/          Light / Cyber
+```
+
+Imports only point downward: a page may use features, layout and ui; a feature
+component may use ui; `ui/` imports nothing app-specific. That keeps the design
+system reusable and stops a button from knowing what a task is.
+
+### Routing
+
+`App.jsx` holds the whole route table (React Router 6). Every page except
+`/signin` is nested under `<AppLayout>`, which renders the sidebar and topbar
+once and swaps the page into its `<Outlet />`. The topbar breadcrumb is derived
+from the path. `/calendar?date=YYYY-MM-DD` opens the calendar on a given day,
+which is how the Overview week strip links into it.
+
+### Component hierarchy
+
+```
+App
+└── TasksProvider
+    ├── SignIn
+    └── AppLayout
+        ├── Sidebar ─── Logo, NavLinks, progress ring, ThemeToggle, UserMenu, GuidancePanel
+        ├── Topbar ──── GlobalSearch, UserMenu
+        └── <Outlet>
+            ├── Overview ──── HeroPanel, StatCard ×4, CourseCard, TaskRow, WeekPanel, FocusPanel
+            ├── Courses ───── CoursesToolbar, SemesterPicker, CourseCard, Create/EditCourseModal, DeleteConfirmDialog
+            ├── CourseDetail  CourseProgressPanel, TaskListPanel, EditCourseModal
+            ├── Tasks ─────── TaskListPanel ── TaskRow / TaskCard (board) ── StatusSelect, Badge
+            ├── Upcoming ──── horizon banner, tabs, TaskListPanel
+            ├── Calendar ──── MonthGrid, DayPanel ── TaskDateItem
+            ├── TaskDetail ── StatusSelect, EditTaskModal
+            └── Profile, NotFound
+```
+
+Pages that list tasks share **`TaskListPanel`** (search, filters, sort, list vs
+board view, pagination) and the same trio of dialogs: `CreateTaskModal`,
+`EditTaskModal` (both wrap `BodyTaskForm`) and `TaskMessageDialog`.
+
+### State management
+
+| State                                   | Owner                       | Why there                                    |
+| --------------------------------------- | --------------------------- | -------------------------------------------- |
+| `tasks`, `courses`, `loading`, `error`  | `TasksProvider` (Context)   | Read by the sidebar, search and five pages at once |
+| Derived figures (overdue, this week, % done, course progress) | computed with `useMemo` / `taskStats.js` | Never stored, so they can't go stale |
+| Filters, sort, page number, view mode   | `TaskListPanel` local state | Only that panel cares                        |
+| Which modal is open, the task being edited | Each page, `useState`    | UI-only                                      |
+| Theme                                   | `ThemeProvider` + `localStorage` | Survives reloads                        |
+| Selected day / month                    | `Calendar`, seeded from `?date=` | Linkable                                |
+
+No Redux: one shared list and a handful of writes don't need it. Context plus
+derived values keeps a single source of truth — mark a task done on the
+calendar and the sidebar ring, dashboard cards and Upcoming count all move,
+because they all read the same array.
+
+### API integration
+
+1. Pages never call `fetch`. They call context actions (`addTask`,
+   `updateTask`, `setTaskStatus`, `deleteTask`), which call `src/api/*.js`.
+2. `TaskApi.readResponse` unwraps `{ success, data }` and throws an `Error`
+   with the server's `message` on failure; the context stores it in `error`
+   and pages show it above the list.
+3. On mount the provider loads tasks and courses in parallel
+   (`Promise.all`).
+4. **Status change and delete are optimistic**: the list updates immediately
+   and rolls back to the previous array if the request fails.
+5. **Create and full update refetch** the list, because the API replies with
+   only an id or a message.
+6. Search and filters run **in the browser** over the loaded list, so every
+   page sees the full list and typing costs no requests. The API also supports
+   `?search=&status=…` for when the list is too large to load at once.
+7. `useBackendStatus` polls `/api/health` every 30 s; the sidebar warns when
+   the campus is offline.
+
+### Conventions
+
+- One component per file, PascalCase; helpers in camelCase `.js` beside the
+  components that use them (`taskMeta.js`, `calendarGrid.js`).
+- Each component imports its own CSS; colours come from `tokens.css` only.
+- Dates stay `YYYY-MM-DD` strings end to end.
+
+---
+
+## Backend structure
+
+```
+backend/src/
+├── server.js         builds the app: cors → json → routers → 404 → error handler
+├── db.js             one mysql2 pool shared by every route
+└── routes/
+    ├── courses.js    CRUD + task counts
+    ├── tasks.js      CRUD, status PATCH, search / filter / sort
+    └── stats.js      dashboard aggregates
+```
+
+### Request lifecycle
+
+```
+request
+  → cors()            only the Vite origin may call
+  → express.json()    body parsed into req.body
+  → router handler    validate → parameterised SQL → shape the row → respond
+       └─ throws → next(error)
+  → 404 handler       no route matched            { error: "Not found" }
+  → error handler     anything unhandled          { error: message }, 500
+```
+
+### Business logic organisation
+
+The app is small, so each router file holds its handlers directly — there is no
+separate service or repository layer yet. Business logic sits in three places:
+
+| Where        | Example                                                          |
+| ------------ | ---------------------------------------------------------------- |
+| Handler      | required-field checks, sort whitelist, status whitelist          |
+| SQL          | `isOverdue`, stats aggregates, the `completed_at` `CASE`         |
+| Schema       | `UNIQUE`, `CHECK`, `ON DELETE RESTRICT`                          |
+
+When a router grows past a few hundred lines, the next step is to pull SQL into
+`src/repositories/` and keep handlers to validation and HTTP.
+
+### Validation strategy — three layers
+
+1. **Frontend forms** (`BodyTaskForm`, `BodyCourseForm`) — required fields,
+   friendly messages. Convenience only; never trusted.
+2. **API handlers** — required fields, `status` whitelist on PATCH, `sort`
+   mapped through a whitelist object so it can never inject SQL, strings
+   trimmed.
+3. **Database** — `CHECK` constraints reject blank names, `ENUM` rejects
+   unknown priorities and statuses, foreign keys reject unknown courses.
+
+All values go through `pool.query(sql, params)` placeholders; nothing is
+concatenated into SQL.
+
+### Error handling
+
+| Situation                     | Response                                              |
+| ----------------------------- | ----------------------------------------------------- |
+| Missing / invalid input       | 400 `{ success: false, message }`                     |
+| Row not found (`affectedRows === 0`) | 404 `{ success: false, message }`              |
+| Duplicate course code         | 409 from `ER_DUP_ENTRY`                               |
+| Delete course with tasks      | 400 from `ER_ROW_IS_REFERENCED_2`, with the task count |
+| Unknown `courseId` on a task  | 400 from `ER_NO_REFERENCED_ROW_2`                     |
+| Anything else                 | `next(error)` → logged, 500 `{ error }`               |
+| MySQL down at boot            | Server logs the cause and exits                       |
+| MySQL down at runtime         | `/api/health` answers 503                             |
+
+### CRUD, end to end — "mark a task done"
+
+```
+TaskRow checkbox
+  → toggleDone(id)                        TaskContext
+  → tasks updated immediately             optimistic
+  → PATCH /api/v1/tasks/7/status {done}   TaskApi.updateTaskStatus
+  → status whitelisted                    tasks.js
+  → UPDATE tasks SET completed_at = CASE … , status = ? WHERE id = ?
+  → chk_tasks_completion passes           MySQL
+  → 200 { success: true }
+  (on failure: restore previous array, show message)
 ```
 
 ---
@@ -198,7 +521,7 @@ stays consistent.
 ### Components
 
 ```jsx
-import { Button, Input, Select, Card, Badge } from '../components/ui'
+import { Button, IconButton, Input, Select, Card, Badge } from '../components/ui'
 import { PageContainer, PageHeader } from '../components/layout'
 ```
 
@@ -208,10 +531,11 @@ import { PageContainer, PageHeader } from '../components/layout'
 | `Input`   | `label`, `hint`, `error`, `required`, `optional`, `icon`, `as="textarea"`  |
 | `Select`  | `label`, `options={[{value,label}]}`, `placeholder`, `error`, `required`   |
 | `Card`    | `eyebrow`, `title`, `action`, `footer`, `padding` `none\|sm\|md\|lg`, `tone` `default\|subtle\|outline`, `hoverable` |
-| `Badge`   | `tone` `neutral\|accent\|high\|medium\|low\|overdue\|done`, `dot`          |
+| `Badge`   | `tone` `neutral\|green\|high\|medium\|low\|overdue\|done`, `dot`, `dotColor` |
 
 `Badge` carries the status colours: `overdue` and `high` are red, `medium`
-amber, `low` and `done` green.
+amber, `low` and `done` green. Leave `tone` off and it reads the child text —
+`"high"`, `"todo"`, `"in_progress"` and friends all map to the right tone.
 
 ### What a page looks like
 
@@ -256,30 +580,47 @@ colour** — use the variable and both themes work for free:
 
 ```css
 .my-thing {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
   padding: var(--space-4);
   border-radius: var(--radius-lg);
 }
 ```
 
-| Purpose             | Variable                                                     |
-| ------------------- | ------------------------------------------------------------ |
-| Page / card / panel | `--bg-page`, `--bg-surface`, `--bg-surface-subtle`           |
-| Text                | `--text-primary`, `--text-secondary`, `--text-muted`          |
-| Brand action        | `--accent`, `--accent-hover`, `--accent-contrast`, `--accent-soft` |
-| Status              | `--danger`, `--warning`, `--success` (+ each `-soft`)         |
-| Course colours      | `--course-green`, `--course-purple`, `--course-amber`, `--course-blue` |
-| Borders             | `--border`, `--border-strong`                                 |
-| Spacing             | `--space-1` … `--space-16` (4px scale)                        |
-| Radii               | `--radius-sm\|md\|lg\|xl\|pill`                               |
+| Purpose             | Variable                                                      |
+| ------------------- | ------------------------------------------------------------- |
+| Surfaces            | `--bg` (page), `--surface` (card), `--sidebar`, `--input`      |
+| Text                | `--ink`, `--subtle`, `--muted`, `--faint` — darkest to lightest |
+| Text on a fill      | `--on-primary`, `--on-danger`, `--inverse`                     |
+| Brand action        | `--green`, `--green-hover`, `--green-soft`                     |
+| Secondary accent    | `--accent`, `--accent-soft` — a different hue, not the brand   |
+| Status              | `--danger`, `--warning`, `--success`, `--neutral` (+ each `-bg` and `-line`) |
+| Course colours      | `--course-software`, `--course-design`, `--course-data`, `--course-math` |
+| Lines               | `--line`, `--line-strong`                                      |
+| Hero / overlay      | `--hero-base`, `--hero-accent`, `--overlay`, `--photo-scrim`   |
+| Elevation           | `--shadow-sm\|md\|lg`, `--focus-ring`                          |
+| Type                | `--font-display`, `--font-sans`, `--text-xs` … `--text-4xl`    |
+| Spacing             | `--space-1` … `--space-16`                                     |
+| Radii               | `--radius-sm\|md\|lg\|xl\|pill`                                |
+
+Two pairs are easy to mix up:
+
+- **`--green` is the brand; `--accent` is not.** The brand green drives buttons,
+  links and active nav. `--accent` is a separate hue that reads purple in Cyber,
+  so reaching for it to mean "our colour" breaks the dark theme. Soft brand
+  backgrounds are `--green-soft`, not `--accent-soft`.
+- **Status fills end in `-bg`, status borders in `-line`** — `--danger-bg` behind
+  `--danger` text, never `--danger` as a background.
 
 ### Themes
 
-Two themes: **Light** (warm paper, forest green) and **Cyber** (near-black,
-mint). The switch is at the bottom of the sidebar. It follows the operating
-system preference until someone picks one, then remembers it.
+Two themes: **Light** (soft green-tinted white, forest green) and **Cyber**
+(near-black, mint). The switch is at the bottom of the sidebar. It follows the
+operating system preference until someone picks one, then remembers it.
+
+`data-theme` on `<html>` is either `light` or `cyber`; `tokens.css` also
+answers to `dark` as an alias so a token block works either way.
 
 Because everything reads from tokens, you never write theme-specific CSS.
 
@@ -321,9 +662,53 @@ Before opening a pull request:
 
 ## Data model
 
-One course has many tasks.
+One user has many courses, and one course has many tasks. A task belongs to a
+user through its course, so `tasks` has no `user_id` of its own.
 
-**courses** — `id`, `name`, `code` *(unique)*, `color`, `created_at`
+```mermaid
+erDiagram
+    USERS ||--o{ COURSES : owns
+    COURSES ||--o{ TASKS : contains
+
+    USERS {
+        int id PK
+        varchar name
+        varchar username UK
+        varchar email UK
+        varchar password_hash
+        varchar avatar_url
+        datetime created_at
+        datetime updated_at
+    }
+    COURSES {
+        int id PK
+        int user_id FK
+        varchar name
+        varchar code "UK with user_id"
+        varchar color
+        datetime created_at
+    }
+    TASKS {
+        int id PK
+        int course_id FK
+        varchar title
+        text description
+        date due_date
+        enum priority "low | medium | high"
+        enum status "todo | in_progress | done"
+        datetime created_at
+        datetime completed_at "set only when done"
+    }
+```
+
+Indexes on `tasks`: `(course_id, due_date)` for a course's list,
+`due_date` for upcoming/overdue, `status` for filters and the dashboard.
+
+**users** — `id`, `name`, `username` *(unique)*, `email` *(unique)*,
+`password_hash`, `avatar_url`, `created_at`, `updated_at`
+
+**courses** — `id`, `user_id` *(FK → users.id)*, `name`, `code` *(unique per
+user)*, `color`, `created_at`
 
 **tasks** — `id`, `course_id` *(FK → courses.id)*, `title`, `description`,
 `due_date`, `priority` *(low | medium | high)*, `status` *(todo | in_progress |
@@ -332,14 +717,28 @@ done)*, `created_at`, `completed_at`
 Two rules are enforced by the database itself, so they hold even if an
 application-level check is missed:
 
-- `courses.code` is `UNIQUE` — a duplicate code fails.
+- `(courses.user_id, courses.code)` is `UNIQUE` — one student can't have the
+  same code twice, but two students can each have a CS201.
+- `users.email` and `users.username` are `UNIQUE`. Email comparison ignores
+  case, so `Alex@school.edu` and `alex@school.edu` are the same account.
 - `tasks.course_id` uses `ON DELETE RESTRICT` — deleting a course that still has
   tasks fails rather than silently destroying them. Catch the error and return a
   clear message.
+- `courses.user_id` uses `ON DELETE RESTRICT` too — a user who still has courses
+  can't be deleted.
+
+> **The database doesn't keep users apart — the API has to.** Every query for
+> courses must filter on the signed-in user's `courses.user_id`, and every query
+> for tasks must join their course and filter the same way. Nothing stops one
+> user's request reading another user's rows if a query forgets.
+
+`users.password_hash` holds a **bcrypt** hash, never the password itself. The
+demo data creates one account for development: `alex@school.edu` with password
+`password123`. It owns every demo course.
 
 > Validation such as "due date cannot be in the past" belongs in the
-> `POST /api/tasks` handler, not the database — `seed.sql` inserts directly and
-> must be able to create overdue rows for testing.
+> `POST /api/v1/tasks` handler, not the database — `SeedData.sql` inserts
+> directly and must be able to create overdue rows for testing.
 
 ---
 
@@ -352,16 +751,28 @@ that `DB_USER` / `DB_PASSWORD` match your local install.
 **`ER_BAD_DB_ERROR: Unknown database`**
 You haven't created the schema yet — run step 2 of Getting started.
 
+**`Unknown column 'user_id'` or `Table 'student_task_manager.users' doesn't exist`**
+Your database was made before users were added. Run the one-time update in
+Getting started.
+
+**`Field 'user_id' doesn't have a default value` when creating a course**
+Every course needs an owner, and the request didn't send one. The courses API
+has to insert the signed-in user's id.
+
 **Frontend calls return 404 or HTML instead of JSON**
-The backend isn't running. Start it on port 4000; the Vite proxy expects it there.
+The backend isn't running — start it on port 4000, where the Vite proxy expects
+it. If the server *is* up, check the path: routes live under `/api/v1/...`, and
+`/api/courses` without the version prefix returns the 404 handler's
+`{ "error": "Not found" }`.
 
 **Dates arrive as `2026-09-07T00:00:00.000Z` instead of `2026-09-07`**
 The pool sets `dateStrings: true`, so MySQL returns plain `YYYY-MM-DD`. If you
 see a timestamp, something wrapped the value in `new Date()` — don't.
 
-**Deleting a course returns a 500**
-That is `ON DELETE RESTRICT` doing its job. Catch the `ER_ROW_IS_REFERENCED_2`
-error and return a 409 with a clear message.
+**Deleting a course returns a 400 "task(s) are currently linked to it"**
+That is `ON DELETE RESTRICT` doing its job: the courses router catches
+`ER_ROW_IS_REFERENCED_2` and reports how many tasks are in the way. Delete or
+move those tasks first.
 
 **Styles look unstyled or colours are wrong**
 Make sure your component imports its own `.css` file, and that you're using token

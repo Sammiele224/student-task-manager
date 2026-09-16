@@ -1,0 +1,113 @@
+/* ==========================================================================
+   Upcoming — the horizon banner and the deadline-range tabs.
+   Everything below them is the shared task card from Tasks.css.
+   ========================================================================== */
+
+.upcoming-horizon {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--green-soft);
+  padding: var(--space-6) var(--space-8);
+}
+
+.upcoming-horizon-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 41px;
+  height: 41px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--green);
+}
+
+.upcoming-horizon-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.upcoming-horizon-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 400;
+  line-height: var(--leading-tight);
+  color: var(--green);
+  margin: 0;
+}
+
+.upcoming-horizon-sub {
+  font-size: var(--text-base);
+  color: var(--subtle);
+  margin: var(--space-2) 0 0;
+}
+
+/* tabs */
+.upcoming-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  border-bottom: 1px solid var(--line);
+  /* Narrow screens scroll the row rather than wrapping it. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.upcoming-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.upcoming-tab {
+  position: relative;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  padding: 0 0 var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-base);
+  color: var(--subtle);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.upcoming-tab::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: transparent;
+}
+
+.upcoming-tab:hover {
+  color: var(--ink);
+}
+
+.upcoming-tab.is-active {
+  color: var(--green);
+  font-weight: 500;
+}
+
+.upcoming-tab.is-active::after {
+  background: var(--green);
+}
+
+.upcoming-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+@media (max-width: 720px) {
+  .upcoming-horizon {
+    padding: var(--space-5);
+    gap: var(--space-4);
+  }
+
+  .upcoming-horizon-title {
+    font-size: var(--text-lg);
+  }
+}

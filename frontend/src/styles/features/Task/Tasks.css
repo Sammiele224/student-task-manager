@@ -1,56 +1,44 @@
-.tasks-header {
+/* ==========================================================================
+   Task list — rows, board cards, toolbar and pagination.
+   The page header comes from the shared PageHeader component.
+   ========================================================================== */
+
+/* Anything the server refused: a failed status change, delete or load. */
+.tasks-banner {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-}
-
-.tasks-eyebrow {
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-.tasks-title {
-  font-size: 40px;
-  line-height: 1.1;
-  color: var(--text-primary);
-  margin: 8px 0 0;
-}
-
-.tasks-subtitle {
-  color: var(--text-secondary);
-  margin: 8px 0 0;
-}
-
-.tasks-new-btn {
-  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  border: none;
-  border-radius: 13px;
-  padding: 10px 18px;
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  margin-top: 30px;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--danger-bg);
+  border-radius: var(--radius-md);
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: var(--text-base);
 }
 
-.tasks-new-btn:hover {
-  background: var(--accent-hover);
+.tasks-banner button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 var(--space-1);
+}
+
+.tasks-loading {
+  padding: 48px 20px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
 }
 
 /* card */
 .tasks-card {
-  margin: 30px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--bg-surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
   box-shadow: var(--shadow-sm);
 }
 
@@ -59,47 +47,47 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid var(--border);
-  padding: 16px 24px;
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding: 14px 20px;
 }
 
 .tasks-search {
   position: relative;
   flex: 1;
-  min-width: 220px;
+  min-width: 187px;
 }
 
 .tasks-search svg {
   position: absolute;
-  left: 12px;
+  left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  color: var(--text-muted);
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
   pointer-events: none;
 }
 
 .tasks-search input {
   width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 12px 8px 36px;
-  font-size: 14px;
-  color: var(--text-primary);
-  background: var(--bg-surface);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 7px 10px 7px 31px;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--surface);
 }
 
 .tasks-search input::placeholder {
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 .tasks-search input:focus,
 .tasks-dropdown select:focus {
   outline: none;
   box-shadow: var(--focus-ring);
-  border-color: var(--accent);
+  border-color: var(--green);
 }
 
 .tasks-dropdown {
@@ -108,27 +96,27 @@
 
 .tasks-dropdown select {
   appearance: none;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  padding: 8px 30px 8px 12px;
-  font-size: 14px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 7px 26px 7px 10px;
+  font-size: 12px;
   cursor: pointer;
 }
 
 .tasks-dropdown select:hover {
-  border-color: var(--border-strong);
+  border-color: var(--line-strong);
 }
 
 .tasks-dropdown svg {
   position: absolute;
-  right: 10px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  width: 14px;
-  height: 14px;
-  color: var(--text-muted);
+  width: 12px;
+  height: 12px;
+  color: var(--muted);
   pointer-events: none;
 }
 
@@ -137,8 +125,8 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
   padding: 4px;
 }
 
@@ -147,18 +135,18 @@
   background: transparent;
   border-radius: 6px;
   padding: 6px;
-  color: var(--text-muted);
+  color: var(--muted);
   cursor: pointer;
   display: flex;
 }
 
 .tasks-view-toggle button:hover {
-  color: var(--text-secondary);
+  color: var(--subtle);
 }
 
 .tasks-view-toggle button.active {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
+  background: var(--neutral-bg);
+  color: var(--ink);
 }
 
 /* meta */
@@ -166,33 +154,34 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px 0;
-  font-size: 14px;
-  color: var(--text-secondary);
+  padding: 14px 20px 0;
+  font-size: 12px;
+  color: var(--subtle);
 }
 
 /* rows */
 .tasks-row,
 .tasks-row-head {
   display: grid;
-  grid-template-columns: 1fr 140px 140px 150px;
-  gap: 16px;
+  grid-template-columns: 1fr 119px 119px 128px;
+  gap: 14px;
   align-items: center;
 }
 
 .tasks-row-head {
-  margin-top: 12px;
-  padding: 0 24px 8px;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--text-muted);
+  margin-top: 10px;
+  padding: 0 20px 7px;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .tasks-row {
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
   border-left: 2px solid transparent;
 }
 
@@ -201,27 +190,88 @@
 }
 
 .tasks-empty {
-  padding: 40px 24px;
+  padding: 48px 20px;
   text-align: center;
-  font-size: 14px;
-  color: var(--text-muted);
+}
+
+.tasks-empty-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0;
+}
+
+.tasks-empty-text {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 6px 0 0;
 }
 
 /* assignment cell */
 .tasks-assignment {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
+}
+
+.tasks-assignment-text {
+  min-width: 0;
+}
+
+/* The pencil stays out of the way until the row is hovered or focused. */
+/* Row actions stay hidden until the row is hovered, so a long list reads as
+   titles rather than as rows of buttons. Keyboard users get them on focus. */
+.tasks-row-actions {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tasks-row-action {
+  display: flex;
+  padding: 6px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease),
+    background var(--duration-fast) var(--ease);
+}
+
+.tasks-row:hover .tasks-row-action,
+.tasks-row-action:focus-visible {
+  opacity: 1;
+}
+
+.tasks-row-action:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.tasks-row-action:hover {
+  background: var(--neutral-bg);
+  color: var(--ink);
+}
+
+/* Deleting cannot be undone, so the bin turns red before it is clicked. */
+.tasks-row-action--danger:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .tasks-checkbox {
   margin-top: 2px;
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
   border-radius: 4px;
-  border: 1px solid var(--border-strong);
-  background: var(--bg-surface);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -230,38 +280,55 @@
 }
 
 .tasks-checkbox.done {
-  border-color: var(--accent);
-  background: var(--accent);
+  border-color: var(--green);
+  background: var(--green);
 }
 
 .tasks-checkbox svg {
-  width: 12px;
-  height: 12px;
-  color: var(--accent-contrast);
+  width: 10px;
+  height: 10px;
+  color: var(--on-primary);
 }
 
 .tasks-title-text {
-  font-size: 14px;
+  display: inline-block;
+  font-size: 12px;
   font-weight: 500;
-  color: var(--text-primary);
-  margin: 0;
+  color: var(--ink);
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.tasks-title-text:hover {
+  color: var(--green);
 }
 
 .tasks-title-text.done {
-  color: var(--text-muted);
+  color: var(--muted);
   text-decoration: line-through;
 }
 
 .tasks-subtext {
-  font-size: 12px;
-  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--muted);
   margin: 2px 0 0;
+}
+
+/* Each course keeps its own colour across rows, cards and the detail page. */
+.tasks-course-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--course-color, var(--green));
 }
 
 /* due date cell */
 .tasks-due {
-  font-size: 14px;
-  color: var(--text-secondary);
+  font-size: 12px;
+  color: var(--subtle);
 }
 
 .tasks-due.overdue {
@@ -272,8 +339,8 @@
 }
 
 .tasks-due.overdue svg {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
 }
 
 /* priority badge */
@@ -282,42 +349,24 @@
   align-items: center;
   gap: 6px;
   border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 4px 7px;
+  font-size: 10px;
   font-weight: 700;
 }
 
-.tasks-priority-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-}
-
 .tasks-priority.low {
-  background: var(--success-soft);
+  background: var(--success-bg);
   color: var(--success);
 }
 
 .tasks-priority.medium {
-  background: var(--warning-soft);
+  background: var(--warning-bg);
   color: var(--warning);
 }
 
 .tasks-priority.high {
-  background: var(--danger-soft);
+  background: var(--danger-bg);
   color: var(--danger);
-}
-
-.tasks-priority-dot.low {
-  background: var(--success);
-}
-
-.tasks-priority-dot.medium {
-  background: var(--warning);
-}
-
-.tasks-priority-dot.high {
-  background: var(--danger);
 }
 
 /* status select */
@@ -330,36 +379,36 @@
   appearance: none;
   border: none;
   border-radius: 6px;
-  padding: 6px 26px 6px 12px;
-  font-size: 12px;
+  padding: 6px 22px 6px 10px;
+  font-size: 10px;
   font-weight: 500;
   cursor: pointer;
 }
 
 .tasks-status svg {
   position: absolute;
-  right: 8px;
+  right: 7px;
   top: 50%;
   transform: translateY(-50%);
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   opacity: 0.6;
   pointer-events: none;
   color: currentColor;
 }
 
 .tasks-status.todo select {
-  background: var(--bg-surface-hover);
-  color: var(--text-secondary);
+  background: var(--neutral-bg);
+  color: var(--subtle);
 }
 
 .tasks-status.in-progress select {
-  background: var(--warning-soft);
+  background: var(--warning-bg);
   color: var(--warning);
 }
 
 .tasks-status.done select {
-  background: var(--success-soft);
+  background: var(--success-bg);
   color: var(--success);
 }
 
@@ -368,8 +417,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
+  padding: 14px 17px;
+  border-top: 1px solid var(--line);
 }
 
 .tasks-page-numbers {
@@ -383,15 +432,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 32px;
-  min-width: 32px;
-  padding: 0 10px;
-  border: 1px solid var(--border);
+  height: 27px;
+  min-width: 27px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: var(--bg-surface);
-  color: var(--text-secondary);
+  background: var(--surface);
+  color: var(--subtle);
   font-family: inherit;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -399,7 +448,7 @@
 
 .tasks-pagination-btn:hover:not(:disabled),
 .tasks-page-number:hover:not(.active) {
-  background: var(--bg-surface-hover);
+  background: var(--neutral-bg);
 }
 
 .tasks-pagination-btn:disabled {
@@ -408,17 +457,17 @@
 }
 
 .tasks-page-number.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-contrast);
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--on-primary);
 }
 
 /* grid view */
 .tasks-board {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  padding: 20px 24px 24px;
+  gap: 14px;
+  padding: 17px 20px 20px;
 }
 
 .tasks-board-column {
@@ -430,15 +479,15 @@
 .tasks-board-column-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 4px 12px;
+  gap: 7px;
+  padding: 4px 4px 10px;
 }
 
 .tasks-board-dot {
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: var(--text-muted);
+  background: var(--muted);
 }
 
 .tasks-board-dot.in-progress {
@@ -450,66 +499,70 @@
 }
 
 .tasks-board-column-title {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--ink);
 }
 
 .tasks-board-count {
   margin-left: auto;
-  font-size: 12px;
-  color: var(--text-muted);
+  font-size: 10px;
+  color: var(--muted);
 }
 
 .tasks-board-cards {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .tasks-board-card {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--bg-surface-subtle);
-  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--input);
+  padding: 12px 14px;
 }
 
 .tasks-board-card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 7px;
+  margin-bottom: 7px;
 }
 
 .tasks-board-card-course {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 500;
-  color: var(--text-muted);
-}
-
-.tasks-board-card-course-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--accent);
+  color: var(--muted);
 }
 
 .tasks-board-card-title {
-  font-size: 14px;
+  display: inline-block;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--ink);
   margin: 0 0 6px;
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.tasks-board-card-title:hover {
+  color: var(--green);
+}
+
+.tasks-board-card-title.done {
+  color: var(--muted);
+  text-decoration: line-through;
 }
 
 .tasks-board-card-desc {
-  font-size: 13px;
+  font-size: 11px;
   line-height: var(--leading-snug);
-  color: var(--text-secondary);
-  margin: 0 0 14px;
+  color: var(--subtle);
+  margin: 0 0 12px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -520,15 +573,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 7px;
 }
 
 .tasks-board-card-due {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
-  color: var(--text-muted);
+  font-size: 10px;
+  color: var(--muted);
   flex-shrink: 0;
 }
 
@@ -536,40 +589,39 @@
   color: var(--danger);
 }
 
-.tasks-board-card-footer .tasks-status select {
-  padding: 5px 22px 5px 10px;
-  font-size: 11px;
+.tasks-status--sm select {
+  padding: 5px 19px 5px 8px;
+  font-size: 9px;
 }
 
-.tasks-board-card-footer .tasks-status svg {
-  width: 10px;
-  height: 10px;
-  color: currentColor;
+.tasks-status--sm svg {
+  width: 8px;
+  height: 8px;
 }
 
 .tasks-board-empty {
-  font-size: 13px;
-  color: var(--text-muted);
-  padding: 8px 4px;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 7px 4px;
 }
 
 .tasks-board-add {
   display: flex;
   align-items: center;
   gap: 6px;
-  border: 1px dashed var(--border-strong);
-  border-radius: 10px;
-  padding: 10px 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  padding: 8px 10px;
   background: transparent;
-  color: var(--text-muted);
-  font-size: 13px;
+  color: var(--muted);
+  font-size: 11px;
   cursor: pointer;
 }
 
 .tasks-board-add:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-soft);
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-soft);
 }
 
 @media (max-width: 900px) {

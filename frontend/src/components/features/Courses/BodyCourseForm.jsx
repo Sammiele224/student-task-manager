@@ -1,27 +1,28 @@
 import { useState, useEffect } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { Button } from '../../ui'
+import {
+  COURSE_COLOR_OPTIONS,
+  DEFAULT_COURSE_COLOR,
+  courseColorValue,
+} from './courseColors'
 
-const COLOR_OPTIONS = [
-  { key: 'green', label: 'Green', var: '--course-green' },
-  { key: 'blue', label: 'Blue', var: '--course-blue' },
-  { key: 'sage', label: 'Sage', var: '--course-green' },
-  { key: 'purple', label: 'Purple', var: '--course-purple' },
-]
-
-const EMPTY_VALUES = { name: '', code: '', colorKey: 'green' }
-
+const EMPTY_VALUES = {
+  name: '',
+  code: '',
+  color: DEFAULT_COURSE_COLOR,
+}
 // body form for creat and edit
 export function CourseForm({ initialValues = EMPTY_VALUES, submitLabel = 'Create course', onCancel, onSubmit }) {
   const [name, setName] = useState(initialValues.name)
   const [code, setCode] = useState(initialValues.code)
-  const [colorKey, setColorKey] = useState(initialValues.colorKey)
+  const [color, setColor] = useState(initialValues.color)
 
 
   useEffect(() => {
     setName(initialValues.name)
     setCode(initialValues.code)
-    setColorKey(initialValues.colorKey)
+    setColor(initialValues.color)
   }, [initialValues])
 
   const isValid = name.trim().length > 0 && code.trim().length > 0
@@ -29,7 +30,7 @@ export function CourseForm({ initialValues = EMPTY_VALUES, submitLabel = 'Create
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!isValid) return
-    onSubmit({ name: name.trim(), code: code.trim().toUpperCase(), colorKey })
+    onSubmit({ name: name.trim(), code: code.trim().toUpperCase(), color })
   }
 
   return (
@@ -61,16 +62,17 @@ export function CourseForm({ initialValues = EMPTY_VALUES, submitLabel = 'Create
       <div className="form-field">
         <label>Course color</label>
         <div className="color-swatch-row" role="radiogroup" aria-label="Course color">
-          {COLOR_OPTIONS.map((opt) => (
+          {COURSE_COLOR_OPTIONS.map((opt) => (
             <button
-              key={opt.key}
+              key={opt.value}
               type="button"
               role="radio"
-              aria-checked={colorKey === opt.key}
+              aria-checked={color === opt.value}
               aria-label={opt.label}
-              className={`color-swatch ${colorKey === opt.key ? 'color-swatch--selected' : ''}`}
-              style={{ '--swatch-color': `var(${opt.var})` }}
-              onClick={() => setColorKey(opt.key)}
+              className={`color-swatch ${color === opt.value ? 'color-swatch--selected' : ''
+                }`}
+              style={{ '--swatch-color': courseColorValue(opt.value) }}
+              onClick={() => setColor(opt.value)}
             />
           ))}
         </div>

@@ -1,0 +1,112 @@
+/* One course: the progress summary, then the task list shared with All tasks. */
+
+.course-detail__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.course-detail-loading {
+  padding: var(--space-10) 0;
+  font-size: var(--text-md);
+  color: var(--muted);
+}
+
+/* --- progress summary ----------------------------------------------------- */
+
+/* --course-color comes from the page as an inline style, so the bar and the
+   headline pick up whichever colour the course was given. */
+.course-progress {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.course-progress__empty {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--muted);
+}
+
+.course-progress__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.course-progress__headline {
+  margin: var(--space-1) 0 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.course-progress__percent {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  color: var(--course-color, var(--green));
+}
+
+.course-progress__track {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-bg);
+  overflow: hidden;
+}
+
+.course-progress__fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--course-color, var(--green));
+  transition: width var(--duration) var(--ease);
+}
+
+.course-progress__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.course-progress__stat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+  color: var(--muted);
+}
+
+.course-progress__stat svg {
+  color: var(--faint);
+}
+
+.course-progress__stat-value {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.course-progress__stat--overdue,
+.course-progress__stat--overdue svg,
+.course-progress__stat--overdue .course-progress__stat-value {
+  color: var(--danger);
+}
+
+@media (max-width: 720px) {
+  .course-progress__head {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .course-detail__actions {
+    flex-wrap: wrap;
+  }
+}

@@ -1,289 +1,306 @@
-import React, { useEffect, useState } from "react";
-import "../styles/overview.css";
+import { useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import {
+  ArrowRight,
+  CalendarDays,
+  Clock,
+  ListChecks,
+  Plus,
+  Sparkles,
+  TrendingUp,
+} from 'lucide-react'
+import { useTasks } from '../components/features/Tasks/TaskContext'
+import { CourseCard } from '../components/features/Courses/CourseCard'
+import TaskRow from '../components/features/Tasks/TaskRow'
+import { EditTaskModal } from '../components/features/Tasks/EditTaskModal'
+import { CreateTaskModal } from '../components/features/Tasks/CreateTaskModal'
+import { TaskMessageDialog } from '../components/features/Tasks/TaskMessageDialog'
+import {
+  getCourseProgress,
+  getDashboardStats,
+  getFocusTasks,
+  getUpcomingTasks,
+  isOnHorizon,
+} from '../components/features/Tasks/taskStats'
+import HeroPanel from '../components/features/Overview/HeroPanel'
+import StatCard from '../components/features/Overview/StatCard'
+import WeekPanel from '../components/features/Overview/WeekPanel'
+import FocusPanel from '../components/features/Overview/FocusPanel'
+import { greetingDate } from '../components/features/Overview/overviewDates'
+import SemesterPicker from '../components/features/Courses/SemesterPicker'
+import {
+  ALL_SEMESTERS,
+  filterBySemester,
+} from '../components/features/Courses/courseSemester'
+import '../components/features/Courses/SemesterPicker.css'
+import { PageContainer, PageHeader } from '../components/layout'
+import { Button } from '../components/ui'
 
-const stats = {
-  totalTasks: 35,
-  completedCount: 22,
-  overdueCount: 3,
-  dueThisWeekCount: 8,
-  completionRate: 63,
-};
+import '../styles/features/Task/Tasks.css'
+/* CourseForm.css holds the modal shell and base field styles despite its name. */
+import '../styles/features/Course/CourseForm.css'
+import '../styles/features/Task/TaskForm.css'
+import '../styles/features/Course/Course.css'
+import '../styles/overview.css'
 
-const upcomingTasks = [
-  {
-    id: 102,
-    title: "Build prototype presentation",
-    courseName: "Web Engineering",
-    courseCode: "IT3080",
-    courseColor: "#3B82F6",
-    dueDate: "Sep 10",
-  },
-  {
-    id: 103,
-    title: "Prepare capstone slides",
-    courseName: "Web Engineering",
-    courseCode: "IT3080",
-    courseColor: "#3B82F6",
-    dueDate: "Sep 11",
-  },
-  {
-    id: 104,
-    title: "Complete database assignment",
-    courseName: "Database Systems",
-    courseCode: "IT3020",
-    courseColor: "#10B981",
-    dueDate: "Sep 12",
-  },
-  {
-    id: 105,
-    title: "Review system design notes",
-    courseName: "Software Engineering",
-    courseCode: "IT3040",
-    courseColor: "#8B5CF6",
-    dueDate: "Sep 14",
-  },
-];
+/* The student's name is hardcoded in the sidebar too; there is no account yet. */
+const STUDENT_FIRST_NAME = 'Alex'
 
-const overdueTasks = [
-  {
-    id: 101,
-    title: "Submit capstone report",
-    courseCode: "IT3080",
-    courseColor: "#3B82F6",
-    days: "4 days overdue",
-  },
-  {
-    id: 106,
-    title: "Finish SQL exercises",
-    courseCode: "IT3020",
-    courseColor: "#10B981",
-    days: "3 days overdue",
-  },
-  {
-    id: 107,
-    title: "Upload weekly reflection",
-    courseCode: "IT3040",
-    courseColor: "#8B5CF6",
-    days: "2 days overdue",
-  },
-];
+const COURSES_ON_DASHBOARD = 3
 
-// -----------------------------------------------------------------------
-// FIXED: removed the hardcoded courses array, now fetches real data
-// from /api/v1/courses (Day 4 task — Trân + Nhân)
-// -----------------------------------------------------------------------
+/** One line a day, so the dashboard does not say the same thing every morning. */
+const REMINDERS = [
+  'The secret of getting ahead is getting started.',
+  'Small steps, taken often, go a surprising distance.',
+  'You do not have to finish it today. You do have to begin.',
+  'Done is kinder to you than perfect.',
+  'An hour of attention beats a day of worry.',
+  'Start with the one you have been avoiding.',
+  'Progress is quiet. Trust it anyway.',
+]
 
-function Overview() {
-  const [courses, setCourses] = useState([]);
-  const [coursesLoading, setCoursesLoading] = useState(true);
-  const [coursesError, setCoursesError] = useState(null);
-
-  useEffect(() => {
-    fetch("/api/v1/courses")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load courses");
-        return res.json();
-      })
-      .then((json) => setCourses(json.data)) // backend wraps response as { success, data }
-      .catch((err) => setCoursesError(err.message))
-      .finally(() => setCoursesLoading(false));
-  }, []);
-
-  return (
-    <main className="dashboard">
-      <div className="dashboard-container">
-
-        {/* Header */}
-        <header className="dashboard-header">
-          <div>
-            <p className="header-label">OVERVIEW</p>
-            <h1>Good to see you.</h1>
-            <p className="header-subtitle">
-              Here&apos;s what&apos;s happening with your studies.
-            </p>
-          </div>
-
-          
-        </header>
-
-        {/* Stats */}
-        <section className="stats-bar">
-          <div className="stat-item">
-            <strong>{stats.totalTasks}</strong>
-            <span>Total tasks</span>
-          </div>
-
-          <div className="stat-item">
-            <strong>{stats.completedCount}</strong>
-            <span>Completed</span>
-          </div>
-
-          <div className="stat-item stat-danger">
-            <strong>{stats.overdueCount}</strong>
-            <span>Overdue</span>
-          </div>
-
-          <div className="stat-item">
-            <strong>{stats.dueThisWeekCount}</strong>
-            <span>Due this week</span>
-          </div>
-        </section>
-
-        {/* Main content */}
-        <section className="content-grid">
-
-          {/* Upcoming */}
-          <section className="section-card upcoming-card">
-            <div className="section-heading">
-              <div>
-                <span>YOUR WORK</span>
-                <h2>Upcoming tasks</h2>
-              </div>
-
-              <button>View all →</button>
-            </div>
-
-            <div className="task-list">
-              {upcomingTasks.map((task) => (
-                <div className="task-item" key={task.id}>
-                  <span
-                    className="task-dot"
-                    style={{ backgroundColor: task.courseColor }}
-                  />
-
-                  <div className="task-info">
-                    <h3>{task.title}</h3>
-
-                    <p>
-                      {task.courseName}
-                      <span>·</span>
-                      {task.courseCode}
-                    </p>
-                  </div>
-
-                  <span className="task-due">
-                    {task.dueDate}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Progress */}
-          <section className="section-card progress-card">
-            <div className="section-heading">
-              <div>
-                <span>PROGRESS</span>
-                <h2>This week</h2>
-              </div>
-            </div>
-
-            <div className="progress-content">
-              <div className="progress-number">
-                <strong>{stats.completionRate}%</strong>
-                <span>completed</span>
-              </div>
-
-              <div className="progress-track">
-                <div
-                  className="progress-fill"
-                  style={{
-                    width: `${stats.completionRate}%`,
-                  }}
-                />
-              </div>
-
-              <p>
-                <strong>{stats.completedCount}</strong> of{" "}
-                <strong>{stats.totalTasks}</strong> tasks completed
-              </p>
-            </div>
-          </section>
-
-          {/* Attention */}
-          <section className="section-card attention-card">
-            <div className="section-heading">
-              <div>
-                <span>OVERDUE</span>
-                <h2>Needs attention</h2>
-              </div>
-
-              <button>View all →</button>
-            </div>
-
-            <div className="attention-list">
-              {overdueTasks.map((task) => (
-                <div className="attention-item" key={task.id}>
-                  <span className="attention-icon">!</span>
-
-                  <div className="attention-info">
-                    <h3>{task.title}</h3>
-
-                    <p>
-                      <span
-                        className="mini-dot"
-                        style={{
-                          backgroundColor: task.courseColor,
-                        }}
-                      />
-
-                      {task.courseCode}
-                      <span>·</span>
-                      {task.days}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Courses */}
-          <section className="section-card courses-card">
-            <div className="section-heading">
-              <div>
-                <span>STUDY</span>
-                <h2>Courses</h2>
-              </div>
-
-              <button>View all →</button>
-            </div>
-
-            <div className="course-list">
-              {coursesLoading && <p>Loading courses...</p>}
-
-              {coursesError && (
-                <p style={{ color: "red" }}>{coursesError}</p>
-              )}
-
-              {!coursesLoading && !coursesError && courses.length === 0 && (
-                <p>No courses yet.</p>
-              )}
-
-              {!coursesLoading && !coursesError &&
-                courses.map((course) => (
-                  <div className="course-item" key={course.id}>
-                    <span
-                      className="course-dot"
-                      style={{
-                        backgroundColor: course.color,
-                      }}
-                    />
-
-                    <div>
-                      <h3>{course.name}</h3>
-                      <p>{course.code}</p>
-                    </div>
-
-                    <span className="course-arrow">→</span>
-                  </div>
-                ))}
-            </div>
-          </section>
-
-        </section>
-      </div>
-    </main>
-  );
+function reminderForToday(date = new Date()) {
+  const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000)
+  return REMINDERS[dayOfYear % REMINDERS.length]
 }
 
-export default Overview;
+export default function Overview() {
+  /* Every figure below is derived from the shared task list, so marking a task
+     done anywhere in the app moves these numbers straight away. */
+  const { tasks, courses, loading, error, clearError, addTask, updateTask, deleteTask, toggleDone, setTaskStatus } =
+    useTasks()
+
+  const [creating, setCreating] = useState(false)
+  const [editingTask, setEditingTask] = useState(null)
+  const [taskToDelete, setTaskToDelete] = useState(null)
+  const [semester, setSemester] = useState(ALL_SEMESTERS)
+
+  /* The picker in the header scopes the course list below it. The task figures
+     stay whole-workspace: they answer "how am I doing", not "this term". */
+  const semesterCourses = useMemo(
+    () => filterBySemester(courses, semester),
+    [courses, semester]
+  )
+
+  const stats = getDashboardStats(tasks)
+  const courseProgress = useMemo(() => getCourseProgress(tasks), [tasks])
+  const navigate = useNavigate()
+  const focusTasks = getFocusTasks(tasks)
+  const comingUp = getUpcomingTasks(tasks, 3)
+  const nextTask = comingUp[0] ?? null
+
+  /* The card says "your next 7 days", so it counts the same window the
+     Upcoming page does rather than the Monday-to-Sunday week. */
+  const horizonCount = tasks.filter(isOnHorizon).length
+
+  const handleConfirmDelete = async () => {
+    const id = taskToDelete.id
+    setTaskToDelete(null)
+    setEditingTask(null)
+    try {
+      await deleteTask(id)
+    } catch {
+      /* The context holds the reason and shows it above the page. */
+    }
+  }
+
+  const handleStatusChange = async (id, status) => {
+    try {
+      await setTaskStatus(id, status)
+    } catch {
+      /* Already rolled back and reported by the context. */
+    }
+  }
+
+  const handleToggleDone = async (id) => {
+    try {
+      await toggleDone(id)
+    } catch {
+      /* Already rolled back and reported by the context. */
+    }
+  }
+
+  return (
+    <PageContainer className="overview-page">
+      <PageHeader
+        eyebrow={greetingDate()}
+        title={
+          <>
+            Good to see you, {STUDENT_FIRST_NAME}
+            <span className="overview-stop">.</span>
+          </>
+        }
+        subtitle="Let's make a little room for what matters."
+        actions={
+          <SemesterPicker
+            value={semester}
+            courses={courses}
+            onChange={setSemester}
+          />
+        }
+      />
+
+      {error && (
+        <div className="tasks-banner" role="alert">
+          <span>{error}</span>
+          <button type="button" onClick={clearError} aria-label="Dismiss">
+            ×
+          </button>
+        </div>
+      )}
+
+      <HeroPanel nextTask={nextTask} />
+
+      <section className="stat-row">
+        <StatCard
+          label="Total tasks"
+          icon={<ListChecks size={16} />}
+          value={stats.totalTasks}
+          footnote={`${courses.length} ${courses.length === 1 ? 'course' : 'courses'}, one clear view`}
+        />
+        <StatCard
+          label="Due this week"
+          icon={<CalendarDays size={16} />}
+          value={horizonCount}
+          footnote="Your next 7 days, at a glance"
+        />
+        <StatCard
+          label="Overdue"
+          icon={<Clock size={16} />}
+          value={stats.overdueCount}
+          tone={stats.overdueCount > 0 ? 'danger' : undefined}
+          footnote={stats.overdueCount > 0 ? 'A little attention needed' : 'Nothing running late'}
+        />
+        <StatCard
+          label="Completion rate"
+          icon={<TrendingUp size={16} />}
+          value={stats.completionRate}
+          suffix="%"
+          progress={stats.completionRate}
+          footnote={`${stats.completedCount} of ${stats.totalTasks} tasks completed`}
+        />
+      </section>
+
+      <div className="overview-columns">
+        <div className="overview-main">
+          <section className="overview-block">
+            <header className="overview-block-head">
+              <h2 className="overview-block-title u-display">
+                My courses
+                <span className="overview-count">{semesterCourses.length}</span>
+              </h2>
+              <Link to="/courses" className="overview-link">
+                View all courses
+                <ArrowRight size={14} aria-hidden="true" />
+              </Link>
+            </header>
+
+            {semesterCourses.length === 0 ? (
+              <p className="overview-empty">
+                {loading
+                  ? 'Loading your courses…'
+                  : courses.length === 0
+                    ? 'No courses yet. Add one to get started.'
+                    : 'No courses in this semester.'}
+              </p>
+            ) : (
+              <div className="overview-courses">
+                {semesterCourses.slice(0, COURSES_ON_DASHBOARD).map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    progress={courseProgress.get(course.id)}
+                    onOpen={() => navigate(`/courses/${course.id}`)}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="overview-block">
+            <header className="overview-block-head">
+              <div>
+                <h2 className="overview-block-title u-display">A little focus for today</h2>
+                <p className="overview-block-sub">The next steps that deserve your attention.</p>
+              </div>
+              <Button iconLeft={<Plus size={16} />} onClick={() => setCreating(true)}>
+                New task
+              </Button>
+            </header>
+
+            <div className="tasks-card">
+              <div className="tasks-row-head">
+                <span>Assignment</span>
+                <span>Due date</span>
+                <span>Priority</span>
+                <span>Status</span>
+              </div>
+
+              {loading && <p className="tasks-loading">Loading your assignments…</p>}
+
+              {!loading && focusTasks.length === 0 && (
+                <div className="tasks-empty">
+                  <p className="tasks-empty-title">Nothing needs you right now.</p>
+                  <p className="tasks-empty-text">Every deadline is behind you. Enjoy the quiet.</p>
+                </div>
+              )}
+
+              {!loading &&
+                focusTasks.map((task) => (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    onToggleDone={handleToggleDone}
+                    onStatusChange={handleStatusChange}
+                    onEdit={setEditingTask}
+                  />
+                ))}
+            </div>
+
+            <Link to="/upcoming" className="overview-link overview-link--centred">
+              See everything that&apos;s coming up
+              <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+          </section>
+        </div>
+
+        <aside className="overview-side">
+          <WeekPanel tasks={tasks} coming={comingUp} />
+          <FocusPanel />
+
+          <figure className="overview-reminder">
+            <Sparkles size={16} aria-hidden="true" />
+            <blockquote className="overview-reminder-text">“{reminderForToday()}”</blockquote>
+            <figcaption className="u-eyebrow">A small reminder for today</figcaption>
+          </figure>
+        </aside>
+      </div>
+
+      <CreateTaskModal
+        open={creating}
+        courses={courses}
+        onClose={() => setCreating(false)}
+        onCreate={addTask}
+      />
+
+      <EditTaskModal
+        open={Boolean(editingTask)}
+        task={editingTask}
+        courses={courses}
+        onClose={() => setEditingTask(null)}
+        onSave={updateTask}
+        onDelete={setTaskToDelete}
+      />
+
+      <TaskMessageDialog
+        open={Boolean(taskToDelete)}
+        title="Delete this task?"
+        message={`“${taskToDelete?.title}” will be permanently removed. This cannot be undone.`}
+        confirmLabel="Delete task"
+        tone="danger"
+        onClose={() => setTaskToDelete(null)}
+        onConfirm={handleConfirmDelete}
+      />
+    </PageContainer>
+  )
+}

@@ -116,12 +116,12 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'courseId, title, and dueDate are required.' })
     }
 
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
-    if (dueDate < today) {
-        return res.status(400).json({ success: false, message: 'Due date cannot be in the past.' }) 
-    }
+    // const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
+    // if (dueDate < today) {
+    //     return res.status(400).json({ success: false, message: 'Due date cannot be in the past.' }) 
+    // }
 
-    // Because of the schema check constraint, if inserting a 'done' task immediately, 
+    // due to schema check constraint, if inserting a 'done' task immediately, 
     // it MUST have a completed_at timestamp.
     const completedAt = status === 'done' ? new Date() : null
 
@@ -158,24 +158,31 @@ router.put('/:id', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'All fields are required for a PUT update.' })
     }
 
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
-    if (dueDate < today) {
-        return res.status(400).json({ success: false, message: 'Due date cannot be in the past.' }) 
-    }
+    // const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
+    // if (dueDate < today) {
+    //     return res.status(400).json({ success: false, message: 'Due date cannot be in the past.' }) 
+    // }
 
+    // completed_at is assigned BEFORE status on purpose. MySQL applies SET
+    // clauses left to right and later ones see the values already written, so
+    // with status first the CASE below compares the new status against itself:
+    // marking a task done would leave completed_at NULL and trip
+    // chk_tasks_completion. Reading the old status keeps the first completion
+    // time and only clears it when the task leaves 'done'.
     const query = `
       UPDATE tasks 
-      SET course_id = ?, title = ?, description = ?, due_date = ?, priority = ?, status = ?,
-          completed_at = CASE 
+      SET completed_at = CASE 
             WHEN ? = 'done' AND status != 'done' THEN CURRENT_TIMESTAMP
             WHEN ? != 'done' THEN NULL
             ELSE completed_at 
-          END
+          END,
+          course_id = ?, title = ?, description = ?, due_date = ?, priority = ?, status = ?
       WHERE id = ?
     `
     const [result] = await pool.query(query, [
-      courseId, title.trim(), description?.trim() || null, dueDate, priority, status, 
-      status, status, req.params.id
+      status, status,
+      courseId, title.trim(), description?.trim() || null, dueDate, priority, status,
+      req.params.id
     ])
 
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Task not found' })
@@ -197,16 +204,20 @@ router.patch('/:id/status', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Invalid status value.' })
     }
 
+    // Same CASE and same ordering as the full update above, so a task's
+    // completion time does not depend on which endpoint set its status.
+    // Re-selecting 'done' on a finished task must not restamp it.
     const query = `
       UPDATE tasks 
-      SET status = ?,
-          completed_at = CASE 
-            WHEN ? = 'done' THEN CURRENT_TIMESTAMP
-            ELSE NULL 
-          END
+      SET completed_at = CASE 
+            WHEN ? = 'done' AND status != 'done' THEN CURRENT_TIMESTAMP
+            WHEN ? != 'done' THEN NULL
+            ELSE completed_at 
+          END,
+          status = ?
       WHERE id = ?
     `
-    const [result] = await pool.query(query, [status, status, req.params.id])
+    const [result] = await pool.query(query, [status, status, status, req.params.id])
 
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Task not found' })
 
