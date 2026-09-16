@@ -18,7 +18,8 @@ router.get('/', async (req, res, next) => {
     const query = `
       SELECT 
         c.id, c.name, c.code, c.color, c.created_at AS createdAt,
-        COUNT(t.id) AS taskCount
+        COUNT(t.id) AS taskCount,
+        COUNT(CASE WHEN t.status = 'done' THEN 1 END) AS completedTaskCount
       FROM courses c
       LEFT JOIN tasks t ON c.id = t.course_id
       GROUP BY c.id
@@ -28,6 +29,8 @@ router.get('/', async (req, res, next) => {
 
     const formattedRows = rows.map(row => ({
       ...row,
+      taskCount: Number(row.taskCount), 
+      completedTaskCount: Number(row.completedTaskCount),
       createdAt: formatCreatedAt(row.createdAt)
     }))
 
@@ -70,12 +73,12 @@ router.post('/', async (req, res, next) => {
       success: true,
       data: {
         ...rows[0],
-        taskCount: 0,
+        taskCount: 0,          
+        completedTaskCount: 0,
         createdAt: formatCreatedAt(rows[0].createdAt)
       }
     })
   } catch (error) {
-    // Handle MySQL unique constraint violation for course code
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ 
         success: false, 

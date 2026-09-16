@@ -14,12 +14,12 @@
 
 .page-header__title {
   font-size: var(--text-3xl);
-  color: var(--text-primary);
+  color: var(--ink);
 }
 
 .page-header__subtitle {
   font-size: var(--text-md);
-  color: var(--text-secondary);
+  color: var(--subtle);
 }
 
 .page-header__actions {

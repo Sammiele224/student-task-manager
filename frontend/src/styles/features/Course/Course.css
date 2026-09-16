@@ -2,32 +2,27 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 0 var(--space-4);
+  padding: 0 0 var(--space-5);
   font-size: var(--text-base);
-  color: var(--text-secondary);
+  color: var(--subtle);
 }
 
-.courses-toolbar__semester {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--bg-surface);
-  font-size: var(--text-sm);
-  color: var(--text-primary);
+/* Only a card that actually opens a course looks and behaves clickable. */
+.course-card.is-openable {
   cursor: pointer;
-  transition: border-color var(--duration-fast) var(--ease),
-    background-color var(--duration-fast) var(--ease);
-}
-.courses-toolbar__semester:hover {
-  border-color: var(--border-strong);
-  background: var(--bg-surface-hover);
 }
 
+.course-card.is-openable:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--course-color, var(--green));
+}
+
+/* No gutter of its own: the toolbar, the grid and the page title all sit on
+   the same left edge, which PageContainer sets. A rule separates the header. */
 .courses-wrapper {
-  padding: var(--space-4);
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-6);
 }
 
 .courses-grid {
@@ -44,17 +39,17 @@
 
 /* card shell */
 .course-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  cursor: pointer;
+  cursor: default;
   transition: border-color var(--duration) var(--ease),
     box-shadow var(--duration) var(--ease),
     transform var(--duration) var(--ease);
 }
 .course-card:hover {
-  border-color: var(--border-strong);
+  border-color: var(--line-strong);
   box-shadow: var(--shadow-md);
 }
 .course-card:focus-visible {
@@ -65,31 +60,31 @@
 /* course cover */
 .course-card__cover {
   position: relative;
-  height: 148px;
+  height: 126px;
   display: flex;
   align-items: center;
   justify-content: center;
   background-image: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--course-color) 28%, var(--bg-surface)) 0%,
-    color-mix(in srgb, var(--course-color) 14%, var(--bg-surface)) 100%
+    color-mix(in srgb, var(--course-color) 28%, var(--surface)) 0%,
+    color-mix(in srgb, var(--course-color) 14%, var(--surface)) 100%
   );
 }
 
-.course-card--amber  { --course-color: var(--course-amber); }
-.course-card--purple { --course-color: var(--course-purple); }
-.course-card--green  { --course-color: var(--course-green); }
-.course-card--blue   { --course-color: var(--course-blue); }
+.course-card--amber  { --course-color: var(--course-data); }
+.course-card--purple { --course-color: var(--course-math); }
+.course-card--green  { --course-color: var(--course-software); }
+.course-card--blue   { --course-color: var(--course-design); }
 
 .course-card__cover-icon {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--bg-surface) 55%, transparent);
-  color: color-mix(in srgb, var(--course-color) 70%, var(--text-primary));
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  color: color-mix(in srgb, var(--course-color) 70%, var(--ink));
 }
 
 .course-card__code-tag {
@@ -98,19 +93,19 @@
   bottom: var(--space-3);
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-wide);
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 .course-card__menu {
   position: absolute;
   top: var(--space-3);
   right: var(--space-3);
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   border-radius: var(--radius-sm);
   border: none;
-  background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
-  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  color: var(--subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -118,8 +113,8 @@
   transition: background-color var(--duration-fast) var(--ease);
 }
 .course-card__menu:hover {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
+  background: var(--neutral-bg);
+  color: var(--ink);
 }
 
 /* course body */
@@ -132,7 +127,7 @@
   align-items: center;
   justify-content: space-between;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--subtle);
   margin-bottom: var(--space-3);
 }
 .course-card__meta-left {
@@ -148,9 +143,9 @@
   background: var(--course-color);
 }
 .course-card__active-pill {
-  background: var(--bg-surface-subtle);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
+  background: var(--input);
+  border: 1px solid var(--line);
+  color: var(--subtle);
   padding: 3px var(--space-3);
   border-radius: var(--radius-pill);
   font-size: var(--text-xs);
@@ -160,7 +155,7 @@
   font-size: var(--text-xl);
   font-weight: 600;
   line-height: var(--leading-tight);
-  color: var(--text-primary);
+  color: var(--ink);
   margin: 0 0 var(--space-5);
 }
 
@@ -173,12 +168,12 @@
 }
 
 .course-card__menu {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   border-radius: var(--radius-sm);
   border: none;
-  background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
-  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  color: var(--subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -188,8 +183,8 @@
 }
 .course-card__menu:hover,
 .course-card__menu[aria-expanded='true'] {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
+  background: var(--neutral-bg);
+  color: var(--ink);
 }
 
 /* dropdown for menu */
@@ -199,10 +194,10 @@
   right: 0;
   display: flex;
   flex-direction: column;
-  min-width: 160px;
+  min-width: 136px;
   padding: var(--space-2);
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   animation: menu-in var(--duration-fast) var(--ease);
@@ -235,7 +230,7 @@
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--text-primary);
+  color: var(--ink);
   font-size: var(--text-sm);
   text-align: left;
   cursor: pointer;
@@ -243,10 +238,10 @@
 }
 .course-card__dropdown-item:hover,
 .course-card__dropdown-item:focus-visible {
-  background: var(--bg-surface-hover);
+  background: var(--neutral-bg);
 }
 .course-card__dropdown-item svg {
-  color: var(--text-muted);
+  color: var(--muted);
   flex-shrink: 0;
 }
 
@@ -258,7 +253,7 @@
 }
 .course-card__dropdown-item--danger:hover,
 .course-card__dropdown-item--danger:focus-visible {
-  background: var(--danger-soft);
+  background: var(--danger-bg);
 }
 
 
@@ -266,7 +261,7 @@
 .course-card__dropdown-divider {
   height: 1px;
   margin: var(--space-1) var(--space-2);
-  background: var(--border);
+  background: var(--line);
 }
 
 /* progress */
@@ -274,13 +269,13 @@
   display: flex;
   justify-content: space-between;
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--muted);
   margin-bottom: var(--space-2);
 }
 .course-card__track {
   height: 4px;
   border-radius: var(--radius-pill);
-  background: var(--bg-surface-hover);
+  background: var(--neutral-bg);
   overflow: hidden;
 }
 .course-card__fill {
@@ -297,24 +292,25 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  min-height: 260px;
+  cursor: pointer;
+  min-height: 221px;
   width: 100%;
-  background: var(--bg-surface-subtle);
-  border: 1px dashed var(--border-strong);
-  color: var(--text-primary);
+  background: var(--input);
+  border: 1px dashed var(--line-strong);
+  color: var(--ink);
   transition: border-color var(--duration) var(--ease),
     background-color var(--duration) var(--ease);
 }
 .course-card--add:hover {
-  border-color: var(--accent);
-  background: var(--bg-surface-hover);
+  border-color: var(--green);
+  background: var(--neutral-bg);
 }
 .course-card__add-icon {
-  width: 48px;
-  height: 48px;
+  width: 41px;
+  height: 41px;
   border-radius: var(--radius-pill);
-  background: var(--accent-soft);
-  color: var(--accent-soft-text);
+  background: var(--green-soft);
+  color: var(--green);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -323,9 +319,80 @@
 .course-card__add-title {
   font-size: var(--text-lg);
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--ink);
 }
 .course-card__add-sub {
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--muted);
+}
+
+/* pagination */
+.courses-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-8);
+  padding-bottom: var(--space-6);
+}
+
+.pagination-button {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--subtle);
+
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+
+  transition: background-color var(--duration-fast) var(--ease),
+    border-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease);
+}
+
+.pagination-button:hover:not(:disabled):not(.pagination-button--active) {
+  background: var(--neutral-bg);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.pagination-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.pagination-button--active {
+  background: var(--green);
+  color: var(--on-primary);
+  border-color: var(--green);
+  cursor: default;
+}
+
+.pagination-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--surface);
+}
+
+.pagination-button--nav {
+  gap: var(--space-1);
+}
+
+.pagination-ellipsis {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  user-select: none;
 }

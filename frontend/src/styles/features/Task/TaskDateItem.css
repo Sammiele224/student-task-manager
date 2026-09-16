@@ -1,0 +1,75 @@
+/* A task shown as a dated line: the calendar's daily view and the dashboard's
+   week panel both list work this way. */
+.task-date-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.task-date-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  padding: var(--space-2) 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--input);
+  line-height: 1.1;
+}
+
+.task-date-tile-month {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  color: var(--muted);
+}
+
+.task-date-tile-day {
+  font-size: var(--text-md);
+  color: var(--ink);
+}
+
+.task-date-text {
+  min-width: 0;
+}
+
+.task-date-title {
+  display: inline-block;
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--ink);
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.task-date-title:hover {
+  color: var(--green);
+}
+
+.task-date-title.is-done {
+  color: var(--faint);
+  text-decoration: line-through;
+}
+
+.task-date-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin: 2px 0 0;
+}
+
+.task-date-meta .is-overdue {
+  color: var(--danger);
+}
+
+.task-date-dot {
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: var(--course-color, var(--green));
+}
