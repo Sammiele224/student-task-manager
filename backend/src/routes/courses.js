@@ -22,10 +22,11 @@ router.get('/', async (req, res, next) => {
         COUNT(CASE WHEN t.status = 'done' THEN 1 END) AS completedTaskCount
       FROM courses c
       LEFT JOIN tasks t ON c.id = t.course_id
+      WHERE c.user_id = ?
       GROUP BY c.id
       ORDER BY c.created_at DESC
     `
-    const [rows] = await pool.query(query)
+    const [rows] = await pool.query(query, [req.user.id])
 
     const formattedRows = rows.map(row => ({
       ...row,
@@ -57,16 +58,17 @@ router.post('/', async (req, res, next) => {
       })
     }
 
-    const insertQuery = `INSERT INTO courses (name, code, color) VALUES (?, ?, ?)`
+    const insertQuery = `INSERT INTO courses (user_id, name, code, color) VALUES (?, ?, ?, ?)`
     const [result] = await pool.query(insertQuery, [
+      req.user.id,
       name.trim(), 
       code.trim(), 
       color?.trim() || 'green'
     ])
 
     const [rows] = await pool.query(
-      `SELECT id, name, code, color, created_at AS createdAt FROM courses WHERE id = ?`, 
-      [result.insertId]
+      `SELECT id, name, code, color, created_at AS createdAt FROM courses WHERE id = ? AND user_id = ?`, 
+      [result.insertId, req.user.id]
     )
 
     res.status(201).json({
@@ -106,8 +108,8 @@ router.put('/:id', async (req, res, next) => {
     }
     
     // update course in database
-    const updateQuery = `UPDATE courses SET name = ?, code = ?, color = ? WHERE id = ?`
-    const [result] = await pool.query(updateQuery, [name.trim(), code.trim(), color.trim(), id])
+    const updateQuery = `UPDATE courses SET name = ?, code = ?, color = ? WHERE id = ? AND user_id = ?`
+    const [result] = await pool.query(updateQuery, [name.trim(), code.trim(), color.trim(), id, req.user.id])
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Course not found.' })
@@ -115,8 +117,8 @@ router.put('/:id', async (req, res, next) => {
     
     // fetch the updated course to return in the response
     const [rows] = await pool.query(
-      `SELECT id, name, code, color, created_at AS createdAt FROM courses WHERE id = ?`, 
-      [id]
+      `SELECT id, name, code, color, created_at AS createdAt FROM courses WHERE id = ? AND user_id = ?`, 
+      [id, req.user.id]
     )
 
     res.json({
@@ -145,7 +147,10 @@ router.delete('/:id', async (req, res, next) => {
   try {
     const { id } = req.params
 
-    const [result] = await pool.query(`DELETE FROM courses WHERE id = ?`, [id])
+    const [result] = await pool.query(
+      `DELETE FROM courses WHERE id = ? AND user_id = ?`,
+      [id, req.user.id]
+    )
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Course not found.' })

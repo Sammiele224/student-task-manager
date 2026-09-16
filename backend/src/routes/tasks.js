@@ -25,9 +25,9 @@ router.get('/', async (req, res, next) => {
         (t.due_date < CURDATE() AND t.status != 'done') AS isOverdue
       FROM tasks t
       JOIN courses c ON t.course_id = c.id
-      WHERE 1=1
+      WHERE c.user_id = ?
     `
-    const params = []
+    const params = [req.user.id]
 
     if (search) {
       query += ` AND (t.title LIKE ? OR t.description LIKE ?)`
@@ -85,9 +85,9 @@ router.get('/:id', async (req, res, next) => {
         (t.due_date < CURDATE() AND t.status != 'done') AS isOverdue
       FROM tasks t
       JOIN courses c ON t.course_id = c.id
-      WHERE t.id = ?
+      WHERE t.id = ? AND c.user_id = ?
     `
-    const [rows] = await pool.query(query, [req.params.id])
+    const [rows] = await pool.query(query, [req.params.id, req.user.id])
     if (rows.length === 0) return res.status(404).json({ success: false, message: 'Task not found' })
 
     const row = rows[0]
@@ -114,6 +114,14 @@ router.post('/', async (req, res, next) => {
 
     if (!courseId || !title?.trim() || !dueDate) {
       return res.status(400).json({ success: false, message: 'courseId, title, and dueDate are required.' })
+    }
+
+    const [courseRows] = await pool.query(
+      `SELECT id FROM courses WHERE id = ? AND user_id = ?`,
+      [courseId, req.user.id]
+    )
+    if (courseRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Course not found.' })
     }
 
     // const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
@@ -158,6 +166,14 @@ router.put('/:id', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'All fields are required for a PUT update.' })
     }
 
+    const [courseRows] = await pool.query(
+      `SELECT id FROM courses WHERE id = ? AND user_id = ?`,
+      [courseId, req.user.id]
+    )
+    if (courseRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Course not found.' })
+    }
+
     // const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
     // if (dueDate < today) {
     //     return res.status(400).json({ success: false, message: 'Due date cannot be in the past.' }) 
@@ -170,19 +186,20 @@ router.put('/:id', async (req, res, next) => {
     // chk_tasks_completion. Reading the old status keeps the first completion
     // time and only clears it when the task leaves 'done'.
     const query = `
-      UPDATE tasks 
+      UPDATE tasks AS t
+      JOIN courses AS c ON c.id = t.course_id
       SET completed_at = CASE 
             WHEN ? = 'done' AND status != 'done' THEN CURRENT_TIMESTAMP
             WHEN ? != 'done' THEN NULL
             ELSE completed_at 
           END,
           course_id = ?, title = ?, description = ?, due_date = ?, priority = ?, status = ?
-      WHERE id = ?
+      WHERE t.id = ? AND c.user_id = ?
     `
     const [result] = await pool.query(query, [
       status, status,
       courseId, title.trim(), description?.trim() || null, dueDate, priority, status,
-      req.params.id
+      req.params.id, req.user.id
     ])
 
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Task not found' })
@@ -208,16 +225,17 @@ router.patch('/:id/status', async (req, res, next) => {
     // completion time does not depend on which endpoint set its status.
     // Re-selecting 'done' on a finished task must not restamp it.
     const query = `
-      UPDATE tasks 
+      UPDATE tasks AS t
+      JOIN courses AS c ON c.id = t.course_id
       SET completed_at = CASE 
             WHEN ? = 'done' AND status != 'done' THEN CURRENT_TIMESTAMP
             WHEN ? != 'done' THEN NULL
             ELSE completed_at 
           END,
           status = ?
-      WHERE id = ?
+      WHERE t.id = ? AND c.user_id = ?
     `
-    const [result] = await pool.query(query, [status, status, status, req.params.id])
+    const [result] = await pool.query(query, [status, status, status, req.params.id, req.user.id])
 
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Task not found' })
 
@@ -232,7 +250,12 @@ router.patch('/:id/status', async (req, res, next) => {
  */
 router.delete('/:id', async (req, res, next) => {
   try {
-    const [result] = await pool.query(`DELETE FROM tasks WHERE id = ?`, [req.params.id])
+    const [result] = await pool.query(
+      `DELETE t FROM tasks AS t
+       JOIN courses AS c ON c.id = t.course_id
+       WHERE t.id = ? AND c.user_id = ?`,
+      [req.params.id, req.user.id]
+    )
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Task not found' })
 
     res.json({ success: true, message: 'Task deleted successfully' })

@@ -14,17 +14,19 @@ router.get('/', async (req, res, next) => {
         COUNT(*) AS totalTasks,
         
         -- how many are done
-        CAST(COALESCE(SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END), 0) AS UNSIGNED) AS completedCount,
+        CAST(COALESCE(SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END), 0) AS UNSIGNED) AS completedCount,
         
         --  how many are overdue (before today in VN time, not done)
-        CAST(COALESCE(SUM(CASE WHEN due_date < CURDATE() AND status != 'done' THEN 1 ELSE 0 END), 0) AS UNSIGNED) AS overdueCount,
+        CAST(COALESCE(SUM(CASE WHEN t.due_date < CURDATE() AND t.status != 'done' THEN 1 ELSE 0 END), 0) AS UNSIGNED) AS overdueCount,
         
         -- how many are due THIS week (Monday to Sunday) and not done
         -- YEARWEEK(..., 1) treats Monday as the first day of the week
-        CAST(COALESCE(SUM(CASE WHEN YEARWEEK(due_date, 1) = YEARWEEK(CURDATE(), 1) AND status != 'done' THEN 1 ELSE 0 END), 0) AS UNSIGNED) AS dueThisWeekCount
-      FROM tasks
+        CAST(COALESCE(SUM(CASE WHEN YEARWEEK(t.due_date, 1) = YEARWEEK(CURDATE(), 1) AND t.status != 'done' THEN 1 ELSE 0 END), 0) AS UNSIGNED) AS dueThisWeekCount
+      FROM tasks t
+      JOIN courses c ON t.course_id = c.id
+      WHERE c.user_id = ?
     `
-    const [rows] = await pool.query(query)
+    const [rows] = await pool.query(query, [req.user.id])
     const stats = rows[0]
 
     // Calculate completion rate safely in Node
