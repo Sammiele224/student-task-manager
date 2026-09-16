@@ -1,13 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogIn, User } from 'lucide-react'
+import { LogOut, User } from 'lucide-react'
 import { useClickOutside } from '../../hooks/useClickOutside'
+import { useAuth } from '../../context/AuthContext'
 import './UserMenu.css'
-
-const ITEMS = [
-  { to: '/signin', label: 'Sign in', icon: LogIn },
-  { to: '/profile', label: 'Profile', icon: User },
-]
 
 /**
  * The account menu — Sign in and Profile. The sidebar opens it from its
@@ -25,6 +21,7 @@ export default function UserMenu({ placement = 'down', className = '', renderTri
   const close = useCallback(() => setOpen(false), [])
   const ref = useClickOutside(close, open)
   const navigate = useNavigate()
+  const { logout } = useAuth()
 
   useEffect(() => {
     if (!open) return
@@ -48,22 +45,35 @@ export default function UserMenu({ placement = 'down', className = '', renderTri
 
       {open && (
         <ul className={`user-menu__list user-menu__list--${placement}`} role="menu">
-          {ITEMS.map(({ to, label, icon: Icon }) => (
-            <li key={to} role="none">
-              <button
-                type="button"
-                role="menuitem"
-                className="user-menu__item"
-                onClick={() => {
-                  setOpen(false)
-                  navigate(to)
-                }}
-              >
-                <Icon size={16} aria-hidden="true" />
-                <span>{label}</span>
-              </button>
-            </li>
-          ))}
+          <li role="none">
+            <button
+              type="button"
+              role="menuitem"
+              className="user-menu__item"
+              onClick={() => {
+                setOpen(false)
+                navigate('/profile')
+              }}
+            >
+              <User size={16} aria-hidden="true" />
+              <span>Profile</span>
+            </button>
+          </li>
+          <li role="none">
+            <button
+              type="button"
+              role="menuitem"
+              className="user-menu__item"
+              onClick={() => {
+                setOpen(false)
+                logout()
+                navigate('/login')
+              }}
+            >
+              <LogOut size={16} aria-hidden="true" />
+              <span>Log out</span>
+            </button>
+          </li>
         </ul>
       )}
     </div>

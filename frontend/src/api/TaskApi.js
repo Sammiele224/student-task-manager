@@ -5,18 +5,9 @@
  * Express server, so the frontend never needs to know the backend's origin and
  * the calls keep working when the dev server falls back to another port.
  */
-const API_URL = '/api/v1/tasks'
+import { apiClient } from './apiClient'
 
-/** Unwraps the { success, data } envelope and turns a failure into a throw. */
-async function readResponse(response, fallbackMessage) {
-  const result = await response.json().catch(() => ({}))
-
-  if (!response.ok || result.success === false) {
-    throw new Error(result.message || fallbackMessage)
-  }
-
-  return result.data
-}
+const API_PATH = '/tasks'
 
 /**
  * @param {object} params  optional search, courseId, status, priority, sort, order
@@ -50,16 +41,16 @@ export async function getTasks(filters = {}) {
 
   const queryString = params.toString()
 
-  const response = await fetch(
-    queryString ? `${API_URL}?${queryString}` : API_URL
+  return apiClient(
+    queryString ? `${API_PATH}?${queryString}` : API_PATH,
+    { fallbackMessage: 'Failed to fetch tasks' }
   )
-
-  return readResponse(response, 'Failed to fetch tasks')
 }
 
 export async function getTask(id) {
-  const response = await fetch(`${API_URL}/${id}`)
-  return readResponse(response, 'Failed to fetch this task')
+  return apiClient(`${API_PATH}/${id}`, {
+    fallbackMessage: 'Failed to fetch this task',
+  })
 }
 
 /**
@@ -67,38 +58,34 @@ export async function getTask(id) {
  * callers need to reload the list to get the course and date fields back.
  */
 export async function createTask(task) {
-  const response = await fetch(API_URL, {
+  return apiClient(API_PATH, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+    body: {
       courseId: task.courseId,
       title: task.title,
       description: task.description || null,
       dueDate: task.dueDate,
       priority: task.priority,
       status: task.status,
-    }),
+    },
+    fallbackMessage: 'Failed to create task',
   })
-
-  return readResponse(response, 'Failed to create task')
 }
 
 /** Full update. Every field is required by the API. */
 export async function updateTask(id, task) {
-  const response = await fetch(`${API_URL}/${id}`, {
+  return apiClient(`${API_PATH}/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+    body: {
       courseId: task.courseId,
       title: task.title,
       description: task.description || null,
       dueDate: task.dueDate,
       priority: task.priority,
       status: task.status,
-    }),
+    },
+    fallbackMessage: 'Failed to update task',
   })
-
-  return readResponse(response, 'Failed to update task')
 }
 
 /**
@@ -106,16 +93,16 @@ export async function updateTask(id, task) {
  * timestamp, so never send one.
  */
 export async function updateTaskStatus(id, status) {
-  const response = await fetch(`${API_URL}/${id}/status`, {
+  return apiClient(`${API_PATH}/${id}/status`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status }),
+    body: { status },
+    fallbackMessage: 'Failed to update status',
   })
-
-  return readResponse(response, 'Failed to update status')
 }
 
 export async function deleteTask(id) {
-  const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' })
-  return readResponse(response, 'Failed to delete task')
+  return apiClient(`${API_PATH}/${id}`, {
+    method: 'DELETE',
+    fallbackMessage: 'Failed to delete task',
+  })
 }

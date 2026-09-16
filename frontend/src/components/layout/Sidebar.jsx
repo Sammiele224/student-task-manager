@@ -13,6 +13,7 @@ import ThemeToggle from './ThemeToggle'
 import Logo from './Logo'
 import GuidancePanel from './GuidancePanel'
 import UserMenu from './UserMenu'
+import { useAuth } from '../../context/AuthContext'
 import { useTasks } from '../features/Tasks/TaskContext'
 import { useBackendStatus } from '../../hooks/useBackendStatus'
 import './Sidebar.css'
@@ -34,9 +35,11 @@ const NAV_ITEMS = [
 
 export default function Sidebar({ open = false, onNavigate }) {
   const { completedCount, percentDone } = useTasks()
+  const { user } = useAuth()
 
   const [guidanceOpen, setGuidanceOpen] = useState(false)
   const backend = useBackendStatus()
+  const initials = user?.name?.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || '?'
 
   return (
     <aside className={`sidebar ${open ? 'is-open' : ''}`}>
@@ -118,11 +121,11 @@ export default function Sidebar({ open = false, onNavigate }) {
           )}
         >
           <span className="sidebar__avatar" aria-hidden="true">
-            AM
+            {initials}
           </span>
           <div className="sidebar__user-text">
-            <span className="sidebar__user-name">Alex Morgan</span>
-            <span className="sidebar__user-sub">Personal workspace</span>
+            <span className="sidebar__user-name">{user?.name}</span>
+            <span className="sidebar__user-sub">{user?.email}</span>
           </div>
         </UserMenu>
       </div>

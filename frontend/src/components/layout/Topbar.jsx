@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 import GlobalSearch from './GlobalSearch'
 import UserMenu from './UserMenu'
+import { useAuth } from '../../context/AuthContext'
 import './Topbar.css'
 
 /**
@@ -9,11 +10,13 @@ import './Topbar.css'
  * right. AppLayout passes the trail; every crumb but the last is a link.
  */
 export default function Topbar({ crumbs = [{ label: 'Overview' }], onMenuClick }) {
+  const { user } = useAuth()
   const today = new Date().toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   })
+  const initials = user?.name?.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || '?'
 
   return (
     <header className="topbar">
@@ -57,10 +60,10 @@ export default function Topbar({ crumbs = [{ label: 'Overview' }], onMenuClick }
             <button
               type="button"
               className="topbar__avatar"
-              aria-label="Account menu for Alex Morgan"
+              aria-label={`Account menu for ${user?.name || 'current user'}`}
               {...triggerProps}
             >
-              AM
+              {initials}
             </button>
           )}
         />

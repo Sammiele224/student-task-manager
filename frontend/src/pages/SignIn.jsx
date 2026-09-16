@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { useForcedTheme } from '../theme/theme-context'
+import { useAuth } from '../context/AuthContext'
 import '../styles/features/User/SignIn.css'
 
 export default function SignIn() {
@@ -10,10 +11,10 @@ export default function SignIn() {
   useForcedTheme('light')
 
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [remember, setRemember] = useState(true)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -28,11 +29,10 @@ export default function SignIn() {
 
     setSubmitting(true)
     try {
-    //   call api
-      await new Promise((resolve) => setTimeout(resolve, 600))
+      await login(email, password)
       navigate('/')
-    } catch {
-      setError('We could not sign you in. Check your details and try again.')
+    } catch (err) {
+      setError(err.message || 'We could not sign you in. Check your details and try again.')
     } finally {
       setSubmitting(false)
     }
@@ -97,23 +97,6 @@ export default function SignIn() {
               </div>
             </label>
 
-            {/* Stub until the backend team lands auth: the checkbox holds its
-                state but nothing reads it, and the link has nowhere to go. */}
-            <div className="signin__row">
-              <label className="signin__checkbox">
-                <input
-                  type="checkbox"
-                  name="remember"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                />
-                <span>Remember me</span>
-              </label>
-              <Link to="/signin" className="signin__forgot">
-                Forgot password?
-              </Link>
-            </div>
-
             {error && (
               <p className="signin__error" role="alert">
                 {error}
@@ -124,13 +107,6 @@ export default function SignIn() {
               {submitting ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
-
-          <p className="signin__footer">
-            New here?{' '}
-            <Link to="/signin" className="signin__footer-link">
-              Create an account
-            </Link>
-          </p>
         </div>
       </div>
     </div>

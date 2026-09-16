@@ -2,13 +2,8 @@ import { useRef, useState } from 'react'
 import { Camera, Eye, EyeOff, Pencil, X } from 'lucide-react'
 import Button from '../components/ui/Button'
 import { PageContainer, PageHeader } from '../components/layout'
+import { useAuth } from '../context/AuthContext'
 import '../styles/features/User/Profile.css'
-
-const CURRENT_USER = {
-  username: 'alexmorgan',
-  email: 'alex@school.edu',
-  avatarUrl: '', 
-}
 
 function getInitials(name = '') {
   const parts = name.trim().split(/[\s._-]+/).filter(Boolean)
@@ -18,20 +13,19 @@ function getInitials(name = '') {
 }
 
 export default function Profile() {
+  const { user } = useAuth()
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  const [username] = useState(CURRENT_USER.username)
-  const [email] = useState(CURRENT_USER.email)
+  const [avatarUrl, setAvatarUrl] = useState('')
 
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
-  const [avatarUrl, setAvatarUrl] = useState(CURRENT_USER.avatarUrl)
   const [avatarPreview, setAvatarPreview] = useState(null)
   const fileInputRef = useRef(null)
 
-  const initials = getInitials(username)
+  const initials = getInitials(user?.name)
   const displayedAvatar = avatarPreview || avatarUrl
 
   function handleEditClick() {
@@ -132,7 +126,7 @@ export default function Profile() {
             hidden
           />
 
-          <p className="profile__avatar-name">{username}</p>
+          <p className="profile__avatar-name">{user?.name}</p>
           {editing && (
             <p className="profile__avatar-hint">
               Click the avatar to upload a JPG or PNG, up to 5MB.
@@ -143,10 +137,10 @@ export default function Profile() {
         {/* --- right side --- */}
         <div className="profile__card profile__fields">
           <label className="profile__field">
-            <span className="profile__label">Username</span>
+            <span className="profile__label">Name</span>
             <input
               type="text"
-              value={username}
+              value={user?.name || ''}
               disabled
               className="profile__input"
             />
@@ -156,7 +150,7 @@ export default function Profile() {
             <span className="profile__label">Email</span>
             <input
               type="email"
-              value={email}
+              value={user?.email || ''}
               disabled
               className="profile__input"
             />

@@ -1,71 +1,39 @@
-const API_URL = 'http://localhost:4000/api/v1/courses'
+import { apiClient } from './apiClient'
+
+const API_PATH = '/courses'
 
 export async function getCourses() {
-  const response = await fetch(API_URL)
-
-  const result = await response.json()
-
-  if (!response.ok) {
-    throw new Error(result.message || 'Failed to fetch courses')
-  }
-
-  return result.data
+  return apiClient(API_PATH, { fallbackMessage: 'Failed to fetch courses' })
 }
 
 export async function createCourse(courseData) {
-  const response = await fetch(API_URL, {
+  return apiClient(API_PATH, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+    body: {
       name: courseData.name,
       code: courseData.code,
       color: courseData.color,
-    }),
+    },
+    fallbackMessage: 'Failed to create course',
   })
-
-  const result = await response.json()
-
-  if (!response.ok) {
-    throw new Error(result.message || 'Failed to create course')
-  }
-
-  return result.data
 }
 
 export async function updateCourse(id, courseData) {
-  const response = await fetch(`${API_URL}/${id}`, {
+  return apiClient(`${API_PATH}/${id}`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+    body: {
       name: courseData.name,
       code: courseData.code,
       color: courseData.color,
-    }),
+    },
+    fallbackMessage: 'Failed to update course',
   })
-
-  const result = await response.json()
-
-  if (!response.ok) {
-    throw new Error(result.message || 'Failed to update course')
-  }
-
-  return result.data
 }
 
 export async function deleteCourse(id) {
-  const response = await fetch(`${API_URL}/${id}`, {
+  return apiClient(`${API_PATH}/${id}`, {
     method: 'DELETE',
+    fallbackMessage: 'Failed to delete course',
+    returnEnvelope: true,
   })
-
-  const result = await response.json()
-
-  if (!response.ok) {
-    throw new Error(result.message || 'Failed to delete course')
-  }
-
-  return result
 }
