@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { useForcedTheme } from '../theme/theme-context'
+import { login } from '../api/AuthApi'
 import '../styles/features/User/SignIn.css'
 
 export default function SignIn() {
@@ -20,20 +21,32 @@ export default function SignIn() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-
     if (!email || !password) {
       setError('Enter your email and password to continue.')
       return
     }
-
     setSubmitting(true)
-    try {
-    //   call api
-      await new Promise((resolve) => setTimeout(resolve, 600))
+
+    try { 
+      const { token, user } = await login(email, password) // save token and user 
+      if (remember) {
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        sessionStorage.removeItem('token')
+        sessionStorage.removeItem('user')
+      }
+      else {
+        sessionStorage.setItem('token', token)
+        sessionStorage.setItem('user', JSON.stringify(user))
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+      } 
       navigate('/')
-    } catch {
-      setError('We could not sign you in. Check your details and try again.')
-    } finally {
+    }
+    catch (error) {
+      setError(error.message || 'Login failed.')
+    }
+    finally {
       setSubmitting(false)
     }
   }

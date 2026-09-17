@@ -1,25 +1,8 @@
-/**
- * Task endpoints.
- *
- * The path is relative on purpose. The Vite dev server forwards /api to the
- * Express server, so the frontend never needs to know the backend's origin and
- * the calls keep working when the dev server falls back to another port.
- */
-const API_URL = '/api/v1/tasks'
-
-/** Unwraps the { success, data } envelope and turns a failure into a throw. */
-async function readResponse(response, fallbackMessage) {
-  const result = await response.json().catch(() => ({}))
-
-  if (!response.ok || result.success === false) {
-    throw new Error(result.message || fallbackMessage)
-  }
-
-  return result.data
-}
+import { apiFetch } from './apiClient'
 
 /**
- * @param {object} params  optional search, courseId, status, priority, sort, order
+ * @param {object} filters
+ * optional search, courseId, status, priority, sort, order
  */
 export async function getTasks(filters = {}) {
   const params = new URLSearchParams()
@@ -50,26 +33,22 @@ export async function getTasks(filters = {}) {
 
   const queryString = params.toString()
 
-  const response = await fetch(
-    queryString ? `${API_URL}?${queryString}` : API_URL
+  const result = await apiFetch(
+    queryString ? `/tasks?${queryString}` : '/tasks'
   )
 
-  return readResponse(response, 'Failed to fetch tasks')
+  return result.data
 }
 
 export async function getTask(id) {
-  const response = await fetch(`${API_URL}/${id}`)
-  return readResponse(response, 'Failed to fetch this task')
+  const result = await apiFetch(`/tasks/${id}`)
+
+  return result.data
 }
 
-/**
- * Creates a task. The API answers with only the new id, title and status, so
- * callers need to reload the list to get the course and date fields back.
- */
 export async function createTask(task) {
-  const response = await fetch(API_URL, {
+  const result = await apiFetch('/tasks', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       courseId: task.courseId,
       title: task.title,
@@ -80,14 +59,12 @@ export async function createTask(task) {
     }),
   })
 
-  return readResponse(response, 'Failed to create task')
+  return result.data
 }
 
-/** Full update. Every field is required by the API. */
 export async function updateTask(id, task) {
-  const response = await fetch(`${API_URL}/${id}`, {
+  const result = await apiFetch(`/tasks/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       courseId: task.courseId,
       title: task.title,
@@ -98,24 +75,24 @@ export async function updateTask(id, task) {
     }),
   })
 
-  return readResponse(response, 'Failed to update task')
+  return result.data
 }
 
-/**
- * Status only, for the checkbox and the dropdown. The API owns the completion
- * timestamp, so never send one.
- */
 export async function updateTaskStatus(id, status) {
-  const response = await fetch(`${API_URL}/${id}/status`, {
+  const result = await apiFetch(`/tasks/${id}/status`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({
+      status,
+    }),
   })
 
-  return readResponse(response, 'Failed to update status')
+  return result.data
 }
 
 export async function deleteTask(id) {
-  const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' })
-  return readResponse(response, 'Failed to delete task')
+  const result = await apiFetch(`/tasks/${id}`, {
+    method: 'DELETE',
+  })
+
+  return result.data
 }
