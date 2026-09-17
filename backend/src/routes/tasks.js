@@ -8,6 +8,13 @@ const formatISO = (dateStr) => {
   return dateStr.replace(' ', 'T') + '+07:00'
 }
 
+const VALID_PRIORITIES = ['low', 'medium', 'high']
+const VALID_STATUSES = ['todo', 'in_progress', 'done']
+
+const isValidPriority = (value) => VALID_PRIORITIES.includes(value)
+const isValidStatus = (value) => VALID_STATUSES.includes(value)
+const isValidDateFormat = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value)
+
 /**
  * GET /api/v1/tasks
  * Supports query params: search, courseId, status, priority, sort, order
@@ -116,6 +123,19 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'courseId, title, and dueDate are required.' })
     }
 
+        if (!isValidDateFormat(dueDate)) {
+      return res.status(400).json({ success: false, message: 'dueDate must use YYYY-MM-DD format.' })
+    }
+
+    if (!isValidPriority(priority)) {
+      return res.status(400).json({ success: false, message: 'Invalid priority value.' })
+    }
+
+    if (!isValidStatus(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status value.' })
+    }
+
+
     const [courseRows] = await pool.query(
       `SELECT id FROM courses WHERE id = ? AND user_id = ?`,
       [courseId, req.user.id]
@@ -123,11 +143,6 @@ router.post('/', async (req, res, next) => {
     if (courseRows.length === 0) {
       return res.status(404).json({ success: false, message: 'Course not found.' })
     }
-
-    // const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
-    // if (dueDate < today) {
-    //     return res.status(400).json({ success: false, message: 'Due date cannot be in the past.' }) 
-    // }
 
     // due to schema check constraint, if inserting a 'done' task immediately, 
     // it MUST have a completed_at timestamp.
@@ -166,6 +181,18 @@ router.put('/:id', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'All fields are required for a PUT update.' })
     }
 
+    if (!isValidDateFormat(dueDate)) {
+      return res.status(400).json({ success: false, message: 'dueDate must use YYYY-MM-DD format.' })
+    }
+
+    if (!isValidPriority(priority)) {
+      return res.status(400).json({ success: false, message: 'Invalid priority value.' })
+    }
+
+    if (!isValidStatus(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status value.' })
+    }
+
     const [courseRows] = await pool.query(
       `SELECT id FROM courses WHERE id = ? AND user_id = ?`,
       [courseId, req.user.id]
@@ -173,11 +200,6 @@ router.put('/:id', async (req, res, next) => {
     if (courseRows.length === 0) {
       return res.status(404).json({ success: false, message: 'Course not found.' })
     }
-
-    // const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
-    // if (dueDate < today) {
-    //     return res.status(400).json({ success: false, message: 'Due date cannot be in the past.' }) 
-    // }
 
     // completed_at is assigned BEFORE status on purpose. MySQL applies SET
     // clauses left to right and later ones see the values already written, so
@@ -206,6 +228,10 @@ router.put('/:id', async (req, res, next) => {
 
     res.json({ success: true, message: 'Task updated successfully' })
   } catch (error) {
+    // Handle invalid courseId (Foreign Key constraint violation)
+    if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+      return res.status(400).json({ success: false, message: 'The provided courseId does not exist.' })
+    }
     next(error)
   }
 })
@@ -217,7 +243,7 @@ router.put('/:id', async (req, res, next) => {
 router.patch('/:id/status', async (req, res, next) => {
   try {
     const { status } = req.body
-    if (!['todo', 'in_progress', 'done'].includes(status)) {
+    if (!isValidStatus(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status value.' })
     }
 
