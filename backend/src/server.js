@@ -3,6 +3,8 @@ import express from 'express'
 import cors from 'cors'
 import { assertDbConnection, pool } from './db.js'
 
+import { authenticate } from './middleware/auth.js'
+import authRouter from './routes/auth.js'
 import coursesRouter from './routes/courses.js'
 import tasksRouter from './routes/tasks.js'
 import statsRouter from './routes/stats.js'
@@ -28,9 +30,10 @@ app.get('/api/health', async (req, res) => {
 // --- Feature routes ---------------------------------------------------------
 // Teammates: add routers here as you build them
 
-app.use('/api/v1/courses', coursesRouter)
-app.use('/api/v1/tasks', tasksRouter)
-app.use('/api/v1/stats', statsRouter)
+app.use('/api/v1/auth', authRouter)
+app.use('/api/v1/courses', authenticate, coursesRouter)
+app.use('/api/v1/tasks', authenticate, tasksRouter)
+app.use('/api/v1/stats', authenticate, statsRouter)
 // --- 404 --------------------------------------------------------------------
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found', path: req.originalUrl })
