@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogIn, User } from 'lucide-react'
+import { LogIn, LogOut, User } from 'lucide-react'
 import { useClickOutside } from '../../hooks/useClickOutside'
 import './UserMenu.css'
 
@@ -9,29 +9,30 @@ const ITEMS = [
   { to: '/profile', label: 'Profile', icon: User },
 ]
 
-/**
- * The account menu — Sign in and Profile. The sidebar opens it from its
- * settings gear and the topbar from the avatar, so both show the same list.
- *
- * The wrapper is what the list positions against, which is why the sidebar
- * passes its whole user row in as children rather than just the gear.
- *
- * @param {'up'|'down'} placement   'up' at the foot of the sidebar, 'down' under the topbar
- * @param {string}      className   styles the wrapper, e.g. the sidebar's user row
- * @param {Function}    renderTrigger  gets the props the opening button needs
- */
-export default function UserMenu({ placement = 'down', className = '', renderTrigger, children }) {
+export default function UserMenu({
+  placement = 'down',
+  className = '',
+  renderTrigger,
+  children,
+}) {
   const [open, setOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    !!localStorage.getItem('token')
+  )
+
   const close = useCallback(() => setOpen(false), [])
   const ref = useClickOutside(close, open)
   const navigate = useNavigate()
 
   useEffect(() => {
     if (!open) return
+
     function handleKey(e) {
       if (e.key === 'Escape') setOpen(false)
     }
+
     document.addEventListener('keydown', handleKey)
+
     return () => document.removeEventListener('keydown', handleKey)
   }, [open])
 
@@ -41,29 +42,71 @@ export default function UserMenu({ placement = 'down', className = '', renderTri
     onClick: () => setOpen((v) => !v),
   }
 
+  const handleSignOut = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+
+    setIsLoggedIn(false)
+    setOpen(false)
+
+    navigate('/signin')
+  }
+
   return (
     <div className={`user-menu ${className}`.trim()} ref={ref}>
       {children}
       {renderTrigger(triggerProps)}
 
       {open && (
-        <ul className={`user-menu__list user-menu__list--${placement}`} role="menu">
-          {ITEMS.map(({ to, label, icon: Icon }) => (
-            <li key={to} role="none">
+        <ul
+          className={`user-menu__list user-menu__list--${placement}`}
+          role="menu"
+        >
+          {isLoggedIn ? (
+            <>
+              <li role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="user-menu__item"
+                  onClick={() => {
+                    setOpen(false)
+                    navigate('/profile')
+                  }}
+                >
+                  <User size={16} aria-hidden="true" />
+                  <span>Profile</span>
+                </button>
+              </li>
+
+              <li role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="user-menu__item"
+                  onClick={handleSignOut}
+                >
+                  <LogOut size={16} aria-hidden="true" />
+                  <span>Sign out</span>
+                </button>
+              </li>
+            </>
+          ) : (
+            <li role="none">
               <button
                 type="button"
                 role="menuitem"
                 className="user-menu__item"
                 onClick={() => {
                   setOpen(false)
-                  navigate(to)
+                  navigate('/signin')
                 }}
               >
-                <Icon size={16} aria-hidden="true" />
-                <span>{label}</span>
+                <LogIn size={16} aria-hidden="true" />
+                <span>Sign in</span>
               </button>
             </li>
-          ))}
+          )}
         </ul>
       )}
     </div>
