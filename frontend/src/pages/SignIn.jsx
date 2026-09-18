@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { useForcedTheme } from '../theme/theme-context'
 import { login } from '../api/AuthApi'
+import { useTasks } from '../components/features/Tasks/TaskContext'
 import '../styles/features/User/SignIn.css'
 
 export default function SignIn() {
@@ -11,6 +12,7 @@ export default function SignIn() {
   useForcedTheme('light')
 
   const navigate = useNavigate()
+  const { reload } = useTasks()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -40,7 +42,10 @@ export default function SignIn() {
         sessionStorage.setItem('user', JSON.stringify(user))
         localStorage.removeItem('token')
         localStorage.removeItem('user')
-      } 
+      }
+      /* The task and course lists were fetched before there was a token, so
+         load them again now that the student is signed in. */
+      reload()
       navigate('/')
     }
     catch (error) {
