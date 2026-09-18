@@ -3,6 +3,9 @@ import { pool } from '../db.js'
 
 const router = Router()
 
+// Matches the first swatch the course form offers.
+const DEFAULT_COURSE_COLOR = '#38846B'
+
 // Helper function to format MySQL DATETIME to +07:00 ISO string
 const formatCreatedAt = (dateStr) => {
   if (!dateStr) return null
@@ -63,7 +66,7 @@ router.post('/', async (req, res, next) => {
       req.user.id,
       name.trim(), 
       code.trim(), 
-      color?.trim() || 'green'
+      color?.trim() || DEFAULT_COURSE_COLOR
     ])
 
     const [rows] = await pool.query(
@@ -147,40 +150,55 @@ router.put('/:id', async (req, res, next) => {
 
 /**
  * DELETE /api/v1/courses/:id
- * Delete a course (blocked if tasks are attached)
+ * Delete a course together with every task in it.
+ *
+ * The schema keeps ON DELETE RESTRICT on tasks.course_id, so a stray DELETE
+ * elsewhere still can't drop a course's tasks by accident. This route removes
+ * them on purpose, first, inside one transaction: either the course and all its
+ * tasks go, or nothing does.
  */
 router.delete('/:id', async (req, res, next) => {
+  const connection = await pool.getConnection()
+
   try {
     const { id } = req.params
 
-    const [result] = await pool.query(
+    await connection.beginTransaction()
+
+    // Lock the course row, and only if it belongs to this user, so no task can
+    // be added to it between counting and deleting.
+    const [courses] = await connection.query(
+      `SELECT id FROM courses WHERE id = ? AND user_id = ? FOR UPDATE`,
+      [id, req.user.id]
+    )
+
+    if (courses.length === 0) {
+      await connection.rollback()
+      return res.status(404).json({ success: false, message: 'Course not found.' })
+    }
+
+    const [taskResult] = await connection.query(
+      `DELETE FROM tasks WHERE course_id = ?`,
+      [id]
+    )
+
+    await connection.query(
       `DELETE FROM courses WHERE id = ? AND user_id = ?`,
       [id, req.user.id]
     )
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: 'Course not found.' })
-    }
+    await connection.commit()
 
     res.json({
       success: true,
-      message: 'Course deleted successfully.'
+      message: 'Course deleted successfully.',
+      data: { id: Number(id), deletedTaskCount: taskResult.affectedRows }
     })
   } catch (error) {
-    // catch FK `ON DELETE RESTRICT` constraint violation
-    if (error.code === 'ER_ROW_IS_REFERENCED_2') {
-      // find out exactly how many tasks are blocking deletion 
-      const [taskRows] = await pool.query(
-        `SELECT COUNT(*) as count FROM tasks WHERE course_id = ?`, 
-        [req.params.id]
-      )
-      const count = taskRows[0].count
-      return res.status(409).json({
-        success: false,
-        message: `Cannot delete course: ${count} task(s) are currently linked to it.`
-      })
-    }
+    await connection.rollback().catch(() => {})
     next(error)
+  } finally {
+    connection.release()
   }
 })
 
