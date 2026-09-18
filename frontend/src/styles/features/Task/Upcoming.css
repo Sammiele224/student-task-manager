@@ -101,6 +101,92 @@
   border-radius: var(--radius-sm);
 }
 
+/* pagination */
+.upcoming-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  padding-bottom: var(--space-6);
+}
+
+.upcoming-pagination__pages {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.upcoming-pagination__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease),
+    border-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease);
+}
+
+.upcoming-pagination__nav:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.upcoming-pagination__nav:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.upcoming-pagination__nav:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.upcoming-pagination__page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease);
+}
+
+.upcoming-pagination__page:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.upcoming-pagination__page:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.upcoming-pagination__page.is-active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.upcoming-pagination__page.is-active:hover {
+  background: var(--accent-hover);
+  color: var(--accent-contrast);
+}
+
 @media (max-width: 720px) {
   .upcoming-horizon {
     padding: var(--space-5);

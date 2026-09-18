@@ -38,6 +38,17 @@ export default function Sidebar({ open = false, onNavigate }) {
   const [guidanceOpen, setGuidanceOpen] = useState(false)
   const backend = useBackendStatus()
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const name = user.name || ''
+
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(-2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase()
+
   return (
     <aside className={`sidebar ${open ? 'is-open' : ''}`}>
       <Link to="/" className="sidebar__brand" onClick={onNavigate} aria-label="The Rest of Us — go to Overview">
@@ -118,10 +129,11 @@ export default function Sidebar({ open = false, onNavigate }) {
           )}
         >
           <span className="sidebar__avatar" aria-hidden="true">
-            AM
+            {initials}
           </span>
+
           <div className="sidebar__user-text">
-            <span className="sidebar__user-name">Alex Morgan</span>
+            <span className="sidebar__user-name">{name}</span>
             <span className="sidebar__user-sub">Personal workspace</span>
           </div>
         </UserMenu>

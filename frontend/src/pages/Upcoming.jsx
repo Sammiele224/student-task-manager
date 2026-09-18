@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CalendarDays, Plus } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { useTasks } from '../components/features/Tasks/TaskContext'
 import TaskListPanel from '../components/features/Tasks/TaskListPanel'
 import { EditTaskModal } from '../components/features/Tasks/EditTaskModal'
@@ -66,6 +66,7 @@ export default function Upcoming() {
   const [creating, setCreating] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [taskToDelete, setTaskToDelete] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
   /* A task without a due date has no place on a deadline list. */
   const openTasks = useMemo(
@@ -73,10 +74,22 @@ export default function Upcoming() {
     [tasks]
   )
 
+  const TASKS_PER_PAGE = 4
+
   const overdueTasks = useMemo(() => openTasks.filter(isTaskOverdue), [openTasks])
   const horizonTasks = useMemo(() => openTasks.filter(isOnHorizon), [openTasks])
 
   const scoped = { all: openTasks, overdue: overdueTasks, horizon: horizonTasks }[tab]
+
+  const totalPages = Math.ceil(scoped.length / TASKS_PER_PAGE)
+
+  // pagination
+  const paginatedTasks = useMemo(() => {
+    const startIndex = (currentPage - 1) * TASKS_PER_PAGE
+    const endIndex = startIndex + TASKS_PER_PAGE
+
+    return scoped.slice(startIndex, endIndex)
+  }, [scoped, currentPage])
 
   const handleConfirmDelete = async () => {
     const id = taskToDelete.id
@@ -95,6 +108,7 @@ export default function Upcoming() {
   const handleCreate = async (values) => {
     await addTask(values)
     setTab('all')
+    setCurrentPage(1)
   }
 
   const handleStatusChange = async (id, status) => {
@@ -155,7 +169,10 @@ export default function Upcoming() {
             aria-selected={tab === key}
             aria-controls="upcoming-panel"
             className={`upcoming-tab ${tab === key ? 'is-active' : ''}`}
-            onClick={() => setTab(key)}
+            onClick={() => {
+              setTab(key)
+              setCurrentPage(1)
+            }}
           >
             {key === 'overdue' && overdueTasks.length > 0 ? `${label} (${overdueTasks.length})` : label}
           </button>
@@ -164,7 +181,7 @@ export default function Upcoming() {
 
       <div id="upcoming-panel" role="tabpanel" aria-labelledby={`upcoming-tab-${tab}`}>
         <TaskListPanel
-          tasks={scoped}
+          tasks={paginatedTasks}
           courses={courses}
           loading={loading}
           statusOptions={OPEN_STATUS_OPTIONS}
@@ -175,6 +192,49 @@ export default function Upcoming() {
           onEdit={setEditingTask}
           onDelete={setTaskToDelete}
         />
+
+        {totalPages > 1 && (
+          <div className="upcoming-pagination">
+            <button
+              type="button"
+              className="upcoming-pagination__nav"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((page) => page - 1)}
+              aria-label="Previous page"
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            <div className="upcoming-pagination__pages">
+              {Array.from({ length: totalPages }, (_, index) => {
+                const page = index + 1
+
+                return (
+                  <button
+                    key={page}
+                    type="button"
+                    className={`upcoming-pagination__page ${currentPage === page ? 'is-active' : ''
+                      }`}
+                    onClick={() => setCurrentPage(page)}
+                    aria-current={currentPage === page ? 'page' : undefined}
+                  >
+                    {page}
+                  </button>
+                )
+              })}
+            </div>
+
+            <button
+              type="button"
+              className="upcoming-pagination__nav"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((page) => page + 1)}
+              aria-label="Next page"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
 
       <CreateTaskModal
