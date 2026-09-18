@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { useForcedTheme } from '../theme/theme-context'
 import { login } from '../api/AuthApi'
+import { useTasks } from '../components/features/Tasks/TaskContext'
 import '../styles/features/User/SignIn.css'
 
 export default function SignIn() {
@@ -11,10 +12,13 @@ export default function SignIn() {
   useForcedTheme('light')
 
   const navigate = useNavigate()
+  const { reload } = useTasks()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [remember, setRemember] = useState(true)
+  /* The "remember me" checkbox is hidden for now, so a session always persists
+     in localStorage. Restore the row below to make it a choice again. */
+  const [remember] = useState(true)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -40,7 +44,10 @@ export default function SignIn() {
         sessionStorage.setItem('user', JSON.stringify(user))
         localStorage.removeItem('token')
         localStorage.removeItem('user')
-      } 
+      }
+      /* The task and course lists were fetched before there was a token, so
+         load them again now that the student is signed in. */
+      reload()
       navigate('/')
     }
     catch (error) {
@@ -110,8 +117,8 @@ export default function SignIn() {
               </div>
             </label>
 
-            {/* Stub until the backend team lands auth: the checkbox holds its
-                state but nothing reads it, and the link has nowhere to go. */}
+            {/* Hidden until there is a forgot-password page to link to.
+                Re-enabling this needs setRemember back on the state above. */}
             {/* <div className="signin__row">
               <label className="signin__checkbox">
                 <input

@@ -13,12 +13,26 @@ export default function DeleteConfirmDialog({
   successMessage = "The item has been removed.",
 }) {
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   if (!open && !success) return null;
 
+  /* A refused delete keeps the dialog open with the server's reason, such as a
+     course that still has tasks. Without this the button looked dead. */
   const handleConfirm = async () => {
-    if (onConfirm) {
-      await onConfirm();
+    setError("");
+    setDeleting(true);
+
+    try {
+      if (onConfirm) {
+        await onConfirm();
+      }
+    } catch (err) {
+      setError(err?.message || "Could not delete this. Please try again.");
+      return;
+    } finally {
+      setDeleting(false);
     }
 
     setSuccess(true);
@@ -33,6 +47,7 @@ export default function DeleteConfirmDialog({
 
   const handleCancel = () => {
     setSuccess(false);
+    setError("");
     onCancel?.();
   };
 
@@ -79,6 +94,12 @@ export default function DeleteConfirmDialog({
           <p className="dialog__message">
             {message}
           </p>
+
+          {error && (
+            <p className="dialog__error" role="alert">
+              {error}
+            </p>
+          )}
         </div>
 
         <div className="dialog__actions">
@@ -93,6 +114,8 @@ export default function DeleteConfirmDialog({
           <Button
             variant="danger"
             size="md"
+            loading={deleting}
+            disabled={deleting}
             onClick={handleConfirm}
           >
             Delete

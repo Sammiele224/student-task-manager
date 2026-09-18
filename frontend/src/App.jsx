@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/layout'
+import RequireAuth from './components/layout/RequireAuth'
 import Overview from './pages/Overview'
 import Courses from './pages/Courses'
 import CourseDetail from './pages/CourseDetail'
@@ -19,6 +20,8 @@ export default function App() {
         {/* not have sidebar */}
         <Route path="signin" element={<SignIn />} />
 
+        {/* everything else needs a signed-in student */}
+        <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
 
           <Route index element={<Overview />} />
@@ -44,6 +47,7 @@ export default function App() {
 
           <Route path="*" element={<NotFound />} />
 
+        </Route>
         </Route>
       </Routes>
     </TasksProvider>

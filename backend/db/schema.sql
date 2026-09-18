@@ -85,7 +85,8 @@ CREATE TABLE IF NOT EXISTS courses (
 
     code VARCHAR(20) NOT NULL,
 
-    color VARCHAR(20) NOT NULL DEFAULT 'green',
+    -- A #RRGGBB string, as the API documentation specifies.
+    color VARCHAR(20) NOT NULL DEFAULT '#38846B',
 
     created_at DATETIME
         NOT NULL

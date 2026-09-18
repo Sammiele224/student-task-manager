@@ -10,7 +10,6 @@ import { EditCourseModal } from '../components/features/Courses/EditCourseModal'
 import CourseProgressPanel from '../components/features/Courses/CourseProgressPanel'
 import { courseColorValue } from '../components/features/Courses/courseColors'
 import { isTaskOverdue } from '../components/features/Tasks/taskMeta'
-import { updateCourse } from '../api/CourseApi'
 import { PageContainer, PageHeader } from '../components/layout'
 import { Button, Card } from '../components/ui'
 
@@ -36,20 +35,17 @@ export default function CourseDetail() {
     deleteTask,
     toggleDone,
     setTaskStatus,
+    updateCourse,
   } = useTasks()
 
   const [creating, setCreating] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [taskToDelete, setTaskToDelete] = useState(null)
   const [editingCourse, setEditingCourse] = useState(false)
-  const [course, setCourse] = useState(null)
 
-  /* The route param is a string and the record's id is a number. */
-  const fromList = courses.find((c) => String(c.id) === String(id)) ?? null
-
-  /* A course edited here is held locally so the header updates immediately;
-     the list from the context refreshes on its own next load. */
-  const shown = course ?? fromList
+  /* The route param is a string and the record's id is a number. Read from the
+     shared list, so an edit made here or on My courses shows everywhere. */
+  const shown = courses.find((c) => String(c.id) === String(id)) ?? null
 
   const courseTasks = useMemo(
     () => tasks.filter((t) => String(t.courseId) === String(id)),
@@ -94,9 +90,12 @@ export default function CourseDetail() {
 
   const handleSaveCourse = async (courseId, values) => {
     try {
-      setCourse(await updateCourse(courseId, values))
+      await updateCourse(courseId, values)
     } catch (err) {
       console.error(err)
+
+      /* The dialog shows the reason and stays open, so hand it on. */
+      throw err
     }
   }
 

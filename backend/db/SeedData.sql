@@ -41,17 +41,17 @@ INSERT IGNORE INTO courses (user_id, name, code, color, created_at)
 VALUES
   -- color holds a palette name, not a hex value: the column is VARCHAR(20)
   -- and defaults to 'green'. The frontend maps each name to a design token.
-  (@demo_user_id, 'Data Structures and Algorithms', 'CS201', 'sage', '2026-09-01 00:00:00'),
-  (@demo_user_id, 'Database Systems', 'CS202', 'green', '2026-09-01 00:00:00'),
-  (@demo_user_id, 'Computer Networks', 'CS301', 'teal', '2026-09-01 00:00:00'),
-  (@demo_user_id, 'Web Development', 'CS302', 'blue', '2026-09-01 00:00:00'),
-  (@demo_user_id, 'Discrete Mathematics', 'MA201', 'sage', '2026-09-01 00:00:00');
+  (@demo_user_id, 'Data Structures and Algorithms', 'CS201', '#63956A', '2026-09-01 00:00:00'),
+  (@demo_user_id, 'Database Systems', 'CS202', '#38846B', '2026-09-01 00:00:00'),
+  (@demo_user_id, 'Computer Networks', 'CS301', '#50878C', '2026-09-01 00:00:00'),
+  (@demo_user_id, 'Web Development', 'CS302', '#6A85A5', '2026-09-01 00:00:00'),
+  (@demo_user_id, 'Discrete Mathematics', 'MA201', '#63956A', '2026-09-01 00:00:00');
 
 -- One small independent course for ownership testing. Its code intentionally
 -- matches a primary user's course to exercise per-user uniqueness.
 INSERT IGNORE INTO courses (user_id, name, code, color, created_at)
 VALUES
-  (@second_user_id, 'Algorithms Practice Lab', 'CS201', 'orange', '2026-09-01 00:00:00');
+  (@second_user_id, 'Algorithms Practice Lab', 'CS201', '#B4794A', '2026-09-01 00:00:00');
 
 -- -----------------------------------------------------------------------------
 -- Temporary staging table for task seed data

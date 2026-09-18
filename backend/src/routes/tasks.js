@@ -13,6 +13,35 @@ const VALID_STATUSES = ['todo', 'in_progress', 'done']
 
 const isValidPriority = (value) => VALID_PRIORITIES.includes(value)
 const isValidStatus = (value) => VALID_STATUSES.includes(value)
+
+/* The columns every task response carries, so one task looks the same whether
+   it was just listed, created, updated or ticked off. */
+const TASK_SELECT = `
+  SELECT
+    t.id, t.title, t.description, t.due_date AS dueDate,
+    t.priority, t.status, t.created_at AS createdAt, t.completed_at AS completedAt,
+    c.id AS courseId, c.name AS courseName, c.code AS courseCode, c.color AS courseColor,
+    (t.due_date < CURDATE() AND t.status != 'done') AS isOverdue
+  FROM tasks t
+  JOIN courses c ON t.course_id = c.id
+`
+
+/** Shapes one row the way every task response does. */
+const formatTask = (row) => ({
+  ...row,
+  isOverdue: !!row.isOverdue,
+  createdAt: formatISO(row.createdAt),
+  completedAt: formatISO(row.completedAt)
+})
+
+/**
+ * Reads a task back after a write, so the API answers with the saved task
+ * rather than a bare id or a message. Scoped to the owner, like every query.
+ */
+async function findTask(id, userId) {
+  const [rows] = await pool.query(`${TASK_SELECT} WHERE t.id = ? AND c.user_id = ?`, [id, userId])
+  return rows[0] ? formatTask(rows[0]) : null
+}
 const isValidDateFormat = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value)
 
 /**
@@ -84,29 +113,10 @@ router.get('/', async (req, res, next) => {
  */
 router.get('/:id', async (req, res, next) => {
   try {
-    const query = `
-      SELECT 
-        t.id, t.title, t.description, t.due_date AS dueDate, 
-        t.priority, t.status, t.created_at AS createdAt, t.completed_at AS completedAt,
-        c.id AS courseId, c.name AS courseName, c.code AS courseCode, c.color AS courseColor,
-        (t.due_date < CURDATE() AND t.status != 'done') AS isOverdue
-      FROM tasks t
-      JOIN courses c ON t.course_id = c.id
-      WHERE t.id = ? AND c.user_id = ?
-    `
-    const [rows] = await pool.query(query, [req.params.id, req.user.id])
-    if (rows.length === 0) return res.status(404).json({ success: false, message: 'Task not found' })
+    const task = await findTask(req.params.id, req.user.id)
+    if (!task) return res.status(404).json({ success: false, message: 'Task not found' })
 
-    const row = rows[0]
-    res.json({
-      success: true,
-      data: {
-        ...row,
-        isOverdue: !!row.isOverdue,
-        createdAt: formatISO(row.createdAt),
-        completedAt: formatISO(row.completedAt)
-      }
-    })
+    res.json({ success: true, data: task })
   } catch (error) {
     next(error)
   }
@@ -158,7 +168,7 @@ router.post('/', async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      data: { id: result.insertId, title: title.trim(), status }
+      data: await findTask(result.insertId, req.user.id)
     })
   } catch (error) {
     // Handle invalid courseId (Foreign Key constraint violation)
@@ -226,7 +236,7 @@ router.put('/:id', async (req, res, next) => {
 
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Task not found' })
 
-    res.json({ success: true, message: 'Task updated successfully' })
+    res.json({ success: true, data: await findTask(req.params.id, req.user.id) })
   } catch (error) {
     // Handle invalid courseId (Foreign Key constraint violation)
     if (error.code === 'ER_NO_REFERENCED_ROW_2') {
@@ -265,7 +275,7 @@ router.patch('/:id/status', async (req, res, next) => {
 
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Task not found' })
 
-    res.json({ success: true, message: `Task status updated to ${status}` })
+    res.json({ success: true, data: await findTask(req.params.id, req.user.id) })
   } catch (error) {
     next(error)
   }
