@@ -1,34 +1,43 @@
 /**
  * Course colours.
  *
- * The courses table stores a colour *name* — the column is VARCHAR(20) and
- * defaults to 'green' — and the design system owns what each name looks like.
- * Keeping the hex out of the database means a palette change lands in one
- * file instead of a migration.
+ * The courses table stores the colour itself, as a `#RRGGBB` string, which is
+ * what the API documentation specifies. The four below are the palette the
+ * course form offers; any other hex a course already holds is shown as it is.
+ *
+ * These four read the same in Light and Cyber, so storing the hex rather than a
+ * token name costs nothing in either theme.
  */
 
-export const COURSE_COLORS = {
-  green: { label: 'Green', token: '--course-software' },
-  teal: { label: 'Teal', token: '--course-design' },
-  sage: { label: 'Sage', token: '--course-data' },
-  blue: { label: 'Blue', token: '--course-math' },
-}
+export const COURSE_COLORS = [
+  { value: '#38846B', label: 'Green' },
+  { value: '#50878C', label: 'Teal' },
+  { value: '#63956A', label: 'Sage' },
+  { value: '#6A85A5', label: 'Blue' },
+]
 
-export const DEFAULT_COURSE_COLOR = 'green'
+export const DEFAULT_COURSE_COLOR = '#38846B'
 
-export const COURSE_COLOR_OPTIONS = Object.entries(COURSE_COLORS).map(
-  ([value, { label, token }]) => ({ value, label, token })
-)
+export const COURSE_COLOR_OPTIONS = COURSE_COLORS
 
 /**
- * A CSS colour for a stored value, for `--course-color` or any colour property.
- *
- * Rows seeded before the palette existed hold a hex string instead of a name.
- * Those are passed straight through so old data still shows its own colour
- * rather than collapsing to the default.
+ * Colour names the database used before it held hex. Rows made then still
+ * carry a name, so they keep their own colour instead of collapsing to the
+ * default. New courses never write one.
  */
+const LEGACY_COLOR_NAMES = {
+  green: '#38846B',
+  teal: '#50878C',
+  sage: '#63956A',
+  blue: '#6A85A5',
+}
+
+/** A CSS colour for a stored value, for `--course-color` or any colour property. */
 export function courseColorValue(stored) {
-  if (typeof stored === 'string' && stored.trim().startsWith('#')) return stored.trim()
-  const entry = COURSE_COLORS[stored] ?? COURSE_COLORS[DEFAULT_COURSE_COLOR]
-  return `var(${entry.token})`
+  if (typeof stored !== 'string') return DEFAULT_COURSE_COLOR
+
+  const value = stored.trim()
+  if (value.startsWith('#')) return value
+
+  return LEGACY_COLOR_NAMES[value.toLowerCase()] ?? DEFAULT_COURSE_COLOR
 }
