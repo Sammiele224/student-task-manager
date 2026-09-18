@@ -102,15 +102,15 @@ export default function CourseDetail() {
 
   /* Courses arrive with the task list, so an unknown id before that lands is
      still loading rather than missing. */
-  if (!shown) {
-    if (loading) {
-      return (
-        <PageContainer>
-          <p className="course-detail-loading">Loading this course…</p>
-        </PageContainer>
-      )
-    }
+  if (loading) {
+    return (
+      <PageContainer>
+        <p className="course-detail-loading">Loading this course…</p>
+      </PageContainer>
+    )
+  }
 
+  if (!shown) {
     return (
       <PageContainer>
         <PageHeader
@@ -172,8 +172,8 @@ export default function CourseDetail() {
         courses={courses}
         loading={loading}
         pageSize={TASKS_PER_PAGE}
-        emptyTitle={`Nothing due for ${shown.code} yet.`}
-        emptyText="Add the first assignment and it will appear here."
+        emptyTitle="No tasks in this course yet."
+        emptyText="Add your first task to start managing your work."
         onToggleDone={handleToggleDone}
         onStatusChange={handleStatusChange}
         onEdit={setEditingTask}

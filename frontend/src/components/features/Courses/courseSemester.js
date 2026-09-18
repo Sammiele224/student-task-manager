@@ -86,3 +86,17 @@ export function filterBySemester(courses, key) {
     (course) => semesterOf(course.createdAt ?? course.created_at)?.key === key
   )
 }
+
+export function filterTasksBySemester(tasks, courses, key) {
+  if (key === ALL_SEMESTERS) return tasks
+
+  const semesterCourses = filterBySemester(courses, key)
+
+  const courseIds = new Set(
+    semesterCourses.map((course) => String(course.id))
+  )
+
+  return tasks.filter((task) =>
+    courseIds.has(String(task.courseId))
+  )
+}

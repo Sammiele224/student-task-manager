@@ -31,6 +31,7 @@ import SemesterPicker from '../components/features/Courses/SemesterPicker'
 import {
   ALL_SEMESTERS,
   filterBySemester,
+  filterTasksBySemester,
 } from '../components/features/Courses/courseSemester'
 import '../components/features/Courses/SemesterPicker.css'
 import { PageContainer, PageHeader } from '../components/layout'
@@ -44,7 +45,8 @@ import '../styles/features/Course/Course.css'
 import '../styles/overview.css'
 
 /* The student's name is hardcoded in the sidebar too; there is no account yet. */
-const STUDENT_FIRST_NAME = 'Alex'
+const user = JSON.parse(localStorage.getItem('user'))
+const STUDENT_FIRST_NAME = user?.name || ''
 
 const COURSES_ON_DASHBOARD = 3
 
@@ -82,16 +84,36 @@ export default function Overview() {
     [courses, semester]
   )
 
-  const stats = getDashboardStats(tasks)
-  const courseProgress = useMemo(() => getCourseProgress(tasks), [tasks])
+  const semesterTasks = useMemo(
+    () => filterTasksBySemester(tasks, courses, semester),
+    [tasks, courses, semester]
+  )
+
+  const stats = getDashboardStats(semesterTasks)
+
+  const courseProgress = useMemo(
+    () => getCourseProgress(semesterTasks),
+    [semesterTasks]
+  )
+
   const navigate = useNavigate()
-  const focusTasks = getFocusTasks(tasks)
-  const comingUp = getUpcomingTasks(tasks, 3)
+
+  const focusTasks = useMemo(
+    () => getFocusTasks(semesterTasks),
+    [semesterTasks]
+  )
+
+  const comingUp = useMemo(
+    () => getUpcomingTasks(semesterTasks, 3),
+    [semesterTasks]
+  )
+
   const nextTask = comingUp[0] ?? null
 
-  /* The card says "your next 7 days", so it counts the same window the
-     Upcoming page does rather than the Monday-to-Sunday week. */
-  const horizonCount = tasks.filter(isOnHorizon).length
+  const horizonCount = useMemo(
+    () => semesterTasks.filter(isOnHorizon).length,
+    [semesterTasks]
+  )
 
   const handleConfirmDelete = async () => {
     const id = taskToDelete.id
@@ -265,7 +287,7 @@ export default function Overview() {
         </div>
 
         <aside className="overview-side">
-          <WeekPanel tasks={tasks} coming={comingUp} />
+          <WeekPanel tasks={semesterTasks} coming={comingUp} />
           <FocusPanel />
 
           <figure className="overview-reminder">

@@ -16,8 +16,8 @@ const BREADCRUMBS = {
 
 /* Where a detail route's parent lives, so its crumb can link back. */
 const DETAIL_PARENTS = [
-  { prefix: '/tasks/', to: '/tasks', parent: 'All tasks', label: 'Assignment' },
-  { prefix: '/courses/', to: '/courses', parent: 'My courses', label: 'Course' },
+  { prefix: '/tasks/', to: '/tasks', parent: 'All tasks', label: 'Task Detail' },
+  { prefix: '/courses/', to: '/courses', parent: 'My courses', label: 'Course Detail' },
 ]
 
 /**

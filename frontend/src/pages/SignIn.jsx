@@ -112,7 +112,7 @@ export default function SignIn() {
 
             {/* Stub until the backend team lands auth: the checkbox holds its
                 state but nothing reads it, and the link has nowhere to go. */}
-            <div className="signin__row">
+            {/* <div className="signin__row">
               <label className="signin__checkbox">
                 <input
                   type="checkbox"
@@ -125,7 +125,7 @@ export default function SignIn() {
               <Link to="/signin" className="signin__forgot">
                 Forgot password?
               </Link>
-            </div>
+            </div> */}
 
             {error && (
               <p className="signin__error" role="alert">
@@ -138,12 +138,12 @@ export default function SignIn() {
             </button>
           </form>
 
-          <p className="signin__footer">
+          {/* <p className="signin__footer">
             New here?{' '}
             <Link to="/signin" className="signin__footer-link">
               Create an account
             </Link>
-          </p>
+          </p> */}
         </div>
       </div>
     </div>
