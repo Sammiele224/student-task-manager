@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LogIn, LogOut, User } from 'lucide-react'
 import { useClickOutside } from '../../hooks/useClickOutside'
+import { logout } from '../../api/AuthApi'
 import './UserMenu.css'
 
 const ITEMS = [
@@ -43,8 +44,9 @@ export default function UserMenu({
   }
 
   const handleSignOut = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    /* logout() clears sessionStorage too, which a session started without
+       "remember me" uses. */
+    logout()
 
     setIsLoggedIn(false)
     setOpen(false)

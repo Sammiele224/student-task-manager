@@ -16,7 +16,9 @@ export default function SignIn() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [remember, setRemember] = useState(true)
+  /* The "remember me" checkbox is hidden for now, so a session always persists
+     in localStorage. Restore the row below to make it a choice again. */
+  const [remember] = useState(true)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -115,8 +117,8 @@ export default function SignIn() {
               </div>
             </label>
 
-            {/* Stub until the backend team lands auth: the checkbox holds its
-                state but nothing reads it, and the link has nowhere to go. */}
+            {/* Hidden until there is a forgot-password page to link to.
+                Re-enabling this needs setRemember back on the state above. */}
             {/* <div className="signin__row">
               <label className="signin__checkbox">
                 <input
