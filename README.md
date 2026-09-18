@@ -76,7 +76,7 @@ flowchart LR
 | Database | Relationships, uniqueness, `CHECK` rules, `ON DELETE RESTRICT`         | Business rules that need "today"   |
 
 **Why this shape.** Every rule that must never break (a course code is unique per
-user, a done task has a completion time, a course with tasks can't vanish) lives
+user, a done task has a completion time, tasks never outlive their course) lives
 in the database, so a bug in the API can't violate it. Rules that need context
 ("due date can't be in the past") live in the API. The frontend only ever
 decides how things look.
@@ -139,6 +139,23 @@ mysql -u root -p < backend/db/migrations/001-add-users.sql
 
 Running it twice is safe. Restart the backend afterwards.
 
+### Database made before colours were stored as hex? Run that update too
+
+Courses used to hold a colour *name* (`green`, `teal`, `sage`, `blue`). They now
+hold the colour itself, so the stored value matches the API documentation. This
+converts existing rows to the same four colours they already showed, so nothing
+changes on screen. Safe to run more than once:
+
+```bash
+docker exec -i capstone_mysql mysql -uroot -ppassword < backend/db/migrations/002-course-colors-to-hex.sql
+```
+
+Without Docker:
+
+```bash
+mysql -u root -p < backend/db/migrations/002-course-colors-to-hex.sql
+```
+
 ### 3. Start the backend 
 
 ```bash
@@ -199,12 +216,12 @@ prefix.
 | `GET`    | `/api/v1/courses`             | List courses with `taskCount` + `completedTaskCount` | —                                              | 200     | 500    |
 | `POST`   | `/api/v1/courses`             | Create a course                           | `name`\*, `code`\*, `color`                               | 201 + course | 400 missing field, 409 duplicate code |
 | `PUT`    | `/api/v1/courses/:id`         | Replace a course                          | `name`\*, `code`\*, `color`\*                             | 200 + course | 400, 404, 409 |
-| `DELETE` | `/api/v1/courses/:id`         | Delete a course                           | —                                                         | 200     | 400 still has tasks, 404 |
+| `DELETE` | `/api/v1/courses/:id`         | Delete a course **and all its tasks**     | —                                                         | 200 + `{id, deletedTaskCount}` | 404 |
 | `GET`    | `/api/v1/tasks`               | List tasks joined with their course       | query: `search`, `courseId`, `status`, `priority`, `sort` (`dueDate`\|`priority`\|`createdAt`), `order` (`asc`\|`desc`) | 200 | 500 |
 | `GET`    | `/api/v1/tasks/:id`           | One task                                  | —                                                         | 200     | 404    |
-| `POST`   | `/api/v1/tasks`               | Create a task                             | `courseId`\*, `title`\*, `dueDate`\*, `description`, `priority`, `status` | 201 + `{id,title,status}` | 400 missing field or unknown course |
-| `PUT`    | `/api/v1/tasks/:id`           | Replace a task                            | all six fields required                                   | 200 + message | 400, 404 |
-| `PATCH`  | `/api/v1/tasks/:id/status`    | Change status only                        | `status`\*                                                | 200 + message | 400 invalid status, 404 |
+| `POST`   | `/api/v1/tasks`               | Create a task                             | `courseId`\*, `title`\*, `dueDate`\*, `description`, `priority`, `status` | 201 + the saved task | 400 missing field, bad date, bad priority/status, unknown course |
+| `PUT`    | `/api/v1/tasks/:id`           | Replace a task                            | all six fields required                                   | 200 + the saved task | 400, 404 |
+| `PATCH`  | `/api/v1/tasks/:id/status`    | Change status only                        | `status`\*                                                | 200 + the saved task | 400 invalid status, 404 |
 | `DELETE` | `/api/v1/tasks/:id`           | Delete a task                             | —                                                         | 200     | 404    |
 | `GET`    | `/api/v1/stats`               | Dashboard numbers                         | —                                                         | 200     | 500    |
 | `GET`    | `/api/health`                 | Server + database check                   | —                                                         | 200     | 503 database unreachable |
@@ -220,12 +237,14 @@ prefix.
 - **The server owns `completed_at`.** Both `PUT` and `PATCH` set it with the same
   SQL `CASE`: stamped the first time a task becomes `done`, kept if it is already
   done, cleared when it leaves `done`. The client never sends it.
+- **Every task write answers with the saved task**, read back through one
+  `TASK_SELECT`, so create, replace and status all return the same shape as a
+  read. Clients can merge the response instead of reloading the list.
 - **Task reads join the course.** `courseName`, `courseCode` and `courseColor`
   arrive on every task, so a task row can render without a second request.
 - **`isOverdue` is computed in SQL** (`due_date < CURDATE() AND status != 'done'`)
   so every client gets the same answer.
 - **Database errors become HTTP errors.** `ER_DUP_ENTRY` → 409,
-  `ER_ROW_IS_REFERENCED_2` → 400 with the number of blocking tasks,
   `ER_NO_REFERENCED_ROW_2` → 400 "courseId does not exist". Anything else goes
   to the error handler as a 500.
 
@@ -241,8 +260,16 @@ Content-Type: application/json
 
 ```json
 201 Created
-{ "success": true, "data": { "id": 41, "title": "Lab report 3", "status": "todo" } }
+{ "success": true, "data": {
+  "id": 41, "courseId": 2, "courseName": "Database Systems", "courseCode": "CS202",
+  "courseColor": "#38846B", "title": "Lab report 3", "description": "Sections 1–4",
+  "dueDate": "2026-09-22", "priority": "high", "status": "todo", "isOverdue": false,
+  "createdAt": "2026-09-18T17:45:00+07:00", "completedAt": null
+} }
 ```
+
+Every task write — create, replace, status — answers with the task in this same
+shape, so a client never has to guess what was saved.
 
 ### Response envelope
 
@@ -415,8 +442,9 @@ because they all read the same array.
    (`Promise.all`).
 4. **Status change and delete are optimistic**: the list updates immediately
    and rolls back to the previous array if the request fails.
-5. **Create and full update refetch** the list, because the API replies with
-   only an id or a message.
+5. **Create and full update refetch** the list. The API now answers with the
+   saved task, so these could merge the response instead — a worthwhile
+   simplification once someone has time to re-check the sort order.
 6. Search and filters run **in the browser** over the loaded list, so every
    page sees the full list and typing costs no requests. The API also supports
    `?search=&status=…` for when the list is too large to load at once.
@@ -490,7 +518,6 @@ concatenated into SQL.
 | Missing / invalid input       | 400 `{ success: false, message }`                     |
 | Row not found (`affectedRows === 0`) | 404 `{ success: false, message }`              |
 | Duplicate course code         | 409 from `ER_DUP_ENTRY`                               |
-| Delete course with tasks      | 400 from `ER_ROW_IS_REFERENCED_2`, with the task count |
 | Unknown `courseId` on a task  | 400 from `ER_NO_REFERENCED_ROW_2`                     |
 | Anything else                 | `next(error)` → logged, 500 `{ error }`               |
 | MySQL down at boot            | Server logs the cause and exits                       |
@@ -596,7 +623,7 @@ colour** — use the variable and both themes work for free:
 | Brand action        | `--green`, `--green-hover`, `--green-soft`                     |
 | Secondary accent    | `--accent`, `--accent-soft` — a different hue, not the brand   |
 | Status              | `--danger`, `--warning`, `--success`, `--neutral` (+ each `-bg` and `-line`) |
-| Course colours      | `--course-software`, `--course-design`, `--course-data`, `--course-math` |
+| Course colours      | Stored per course as `#RRGGBB`, not tokens — see [Data model](#data-model) |
 | Lines               | `--line`, `--line-strong`                                      |
 | Hero / overlay      | `--hero-base`, `--hero-accent`, `--overlay`, `--photo-scrim`   |
 | Elevation           | `--shadow-sm\|md\|lg`, `--focus-ring`                          |
@@ -708,7 +735,8 @@ Indexes on `tasks`: `(course_id, due_date)` for a course's list,
 `password_hash`, `avatar_url`, `created_at`, `updated_at`
 
 **courses** — `id`, `user_id` *(FK → users.id)*, `name`, `code` *(unique per
-user)*, `color`, `created_at`
+user)*, `color` *(a `#RRGGBB` string, as the API documentation specifies)*,
+`created_at`
 
 **tasks** — `id`, `course_id` *(FK → courses.id)*, `title`, `description`,
 `due_date`, `priority` *(low | medium | high)*, `status` *(todo | in_progress |
@@ -721,9 +749,11 @@ application-level check is missed:
   same code twice, but two students can each have a CS201.
 - `users.email` and `users.username` are `UNIQUE`. Email comparison ignores
   case, so `Alex@school.edu` and `alex@school.edu` are the same account.
-- `tasks.course_id` uses `ON DELETE RESTRICT` — deleting a course that still has
-  tasks fails rather than silently destroying them. Catch the error and return a
-  clear message.
+- `tasks.course_id` uses `ON DELETE RESTRICT` — a plain `DELETE FROM courses`
+  on a course that still has tasks fails rather than silently destroying them.
+  `DELETE /api/v1/courses/:id` removes the tasks on purpose: it deletes them and
+  then the course inside one transaction, so either both go or neither does. The
+  UI warns how many tasks will be deleted before it asks.
 - `courses.user_id` uses `ON DELETE RESTRICT` too — a user who still has courses
   can't be deleted.
 
@@ -769,10 +799,10 @@ it. If the server *is* up, check the path: routes live under `/api/v1/...`, and
 The pool sets `dateStrings: true`, so MySQL returns plain `YYYY-MM-DD`. If you
 see a timestamp, something wrapped the value in `new Date()` — don't.
 
-**Deleting a course returns a 400 "task(s) are currently linked to it"**
-That is `ON DELETE RESTRICT` doing its job: the courses router catches
-`ER_ROW_IS_REFERENCED_2` and reports how many tasks are in the way. Delete or
-move those tasks first.
+**`Cannot delete or update a parent row: a foreign key constraint fails` when deleting a course**
+That is `ON DELETE RESTRICT` catching a delete that skipped the course's tasks.
+Delete through `DELETE /api/v1/courses/:id`, which removes the tasks first in the
+same transaction.
 
 **Styles look unstyled or colours are wrong**
 Make sure your component imports its own `.css` file, and that you're using token
