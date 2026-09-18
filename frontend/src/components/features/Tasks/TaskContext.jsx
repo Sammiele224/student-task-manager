@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { getToken } from '../../../api/AuthApi'
 import {
   createTask as createTaskRequest,
   deleteTask as deleteTaskRequest,
@@ -6,7 +7,12 @@ import {
   updateTask as updateTaskRequest,
   updateTaskStatus,
 } from '../../../api/TaskApi'
-import { getCourses } from '../../../api/CourseApi'
+import {
+  createCourse as createCourseRequest,
+  deleteCourse as deleteCourseRequest,
+  getCourses,
+  updateCourse as updateCourseRequest,
+} from '../../../api/CourseApi'
 import { courseColorValue } from '../Courses/courseColors'
 import { applyStatus, isTaskOverdue, nextToggledStatus } from './taskMeta'
 
@@ -47,29 +53,49 @@ export function TasksProvider({ children }) {
     }
   }, [])
 
-  useEffect(() => {
-    let cancelled = false
+  /**
+   * Loads everything the signed-in student owns. The provider sits above the
+   * sign-in page, so it mounts before anyone has a token: with none, there is
+   * nothing to ask for, and asking would only leave an "Authentication
+   * required" banner behind. SignIn calls this again once the token is saved.
+   *
+   * Each call gets a number, so a slow earlier load cannot overwrite a newer one.
+   */
+  const loadId = useRef(0)
 
-    async function load() {
-      try {
-        setLoading(true)
-        setError('')
-        const [taskList, courseList] = await Promise.all([getTasks(), getCourses()])
-        if (cancelled) return
-        setTasks(withCourseColor(taskList))
-        setCourses(courseList)
-      } catch (err) {
-        if (!cancelled) setError(err.message || 'Could not reach the server.')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
+  const reload = useCallback(async () => {
+    const id = ++loadId.current
+    const isLatest = () => id === loadId.current
+
+    setError('')
+
+    if (!getToken()) {
+      setTasks([])
+      setCourses([])
+      setLoading(false)
+      return
     }
 
-    load()
-    return () => {
-      cancelled = true
+    try {
+      setLoading(true)
+      const [taskList, courseList] = await Promise.all([getTasks(), getCourses()])
+      if (!isLatest()) return
+      setTasks(withCourseColor(taskList))
+      setCourses(courseList)
+    } catch (err) {
+      if (isLatest()) setError(err.message || 'Could not reach the server.')
+    } finally {
+      if (isLatest()) setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    reload()
+    /* Ignore whatever is still in flight when the provider goes away. */
+    return () => {
+      loadId.current += 1
+    }
+  }, [reload])
 
   /* Create answers with only an id, title and status, and update answers with
      just a message, so there is nothing to merge. Reload rather than guess. */
@@ -119,6 +145,53 @@ export function TasksProvider({ children }) {
     }
   }
 
+  /**
+   * Courses live here beside the tasks so every page reads the one list. The
+   * API answers each write with the course itself, so the change is merged in
+   * rather than reloaded. These throw on failure; the caller shows the reason.
+   */
+  async function addCourse(values) {
+    const created = await createCourseRequest(values)
+    setCourses((prev) => [...prev, created])
+    return created
+  }
+
+  /**
+   * Tasks carry a copy of their course's name, code and colour from the join,
+   * so an edit is written into them too. Otherwise every task row would show
+   * the old course until the next reload.
+   */
+  async function updateCourse(id, values) {
+    const updated = await updateCourseRequest(id, values)
+
+    /* The update response has no task counts, so keep the ones already held. */
+    setCourses((prev) =>
+      prev.map((c) => (String(c.id) === String(id) ? { ...c, ...updated } : c))
+    )
+    setTasks((prev) =>
+      prev.map((t) =>
+        String(t.courseId) === String(id)
+          ? {
+              ...t,
+              courseName: updated.name,
+              courseCode: updated.code,
+              courseColor: courseColorValue(updated.color),
+            }
+          : t
+      )
+    )
+
+    return updated
+  }
+
+  /* The API deletes a course's tasks along with it, so drop them here too, or
+     they would linger on the dashboard, calendar and task lists. */
+  async function deleteCourse(id) {
+    await deleteCourseRequest(id)
+    setCourses((prev) => prev.filter((c) => String(c.id) !== String(id)))
+    setTasks((prev) => prev.filter((t) => String(t.courseId) !== String(id)))
+  }
+
   function getTaskById(id) {
     return tasks.find((t) => String(t.id) === String(id)) ?? null
   }
@@ -133,6 +206,7 @@ export function TasksProvider({ children }) {
     loading,
     error,
     fetchTasks, // search, filter, sort
+    reload, // after sign-in
     clearError: () => setError(''),
     addTask,
     updateTask,
@@ -140,6 +214,9 @@ export function TasksProvider({ children }) {
     toggleDone,
     setTaskStatus,
     getTaskById,
+    addCourse, // courses
+    updateCourse,
+    deleteCourse,
     completedCount, // statistics
     overdueCount,
     totalCount: tasks.length,

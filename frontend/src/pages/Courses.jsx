@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '../components/ui'
@@ -13,28 +13,30 @@ import {
 import { CreateCourseModal } from '../components/features/Courses/CreateCourseModal'
 import { EditCourseModal } from '../components/features/Courses/EditCourseModal'
 import DeleteConfirmDialog from '../components/ui/DeleteConfirmDialog'
-import {
-  getCourses,
-  createCourse,
-  updateCourse,
-  deleteCourse,
-} from '../api/CourseApi'
 import { PageContainer, PageHeader } from '../components/layout'
 
 import '../styles/features/Course/Course.css'
 import '../styles/features/Course/CourseForm.css'
 
 export default function Courses() {
-  /* Course records only carry a task count, so the real done/open split comes
-     from the shared task list. */
-  const { tasks } = useTasks()
+  /* Courses come from the shared context, so an edit made here reaches the task
+     rows, the dashboard and search too. Course records only carry a task count,
+     so the real done/open split comes from the shared task list. */
+  const {
+    tasks,
+    courses,
+    loading,
+    error: loadError,
+    addCourse,
+    updateCourse,
+    deleteCourse,
+  } = useTasks()
   const courseProgress = getCourseProgress(tasks)
   const navigate = useNavigate()
 
-  const [courses, setCourses] = useState([])
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [loading, setLoading] = useState(true)
   const [courseToDelete, setCourseToDelete] = useState(null)
+  const [deletedTaskCount, setDeletedTaskCount] = useState(null)
   const [error, setError] = useState('')
   const [editingCourse, setEditingCourse] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -42,35 +44,12 @@ export default function Courses() {
 
   const COURSES_PER_PAGE = 5
 
-  // get courses
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        setLoading(true)
-        setError('')
-
-        const data = await getCourses()
-
-        setCourses(data)
-      } catch (error) {
-        console.error(error)
-        setError(error.message || 'Failed to load courses')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchCourses()
-  }, [])
-
   // post course
   const handleCreateCourse = async (values) => {
     try {
       setError('')
 
-      const newCourse = await createCourse(values)
-
-      setCourses((prev) => [...prev, newCourse])
+      await addCourse(values)
 
       // move to last page after created
       const newTotalPages = Math.ceil(
@@ -93,18 +72,15 @@ export default function Courses() {
     try {
       setError('')
 
-      const updatedCourse = await updateCourse(id, values)
-
-      setCourses((prev) =>
-        prev.map((course) =>
-          course.id === id ? updatedCourse : course
-        )
-      )
+      await updateCourse(id, values)
 
       setEditingCourse(null)
     } catch (error) {
       console.error(error)
       setError(error.message || 'Failed to update course')
+
+      /* The dialog shows the reason and stays open, so hand it on. */
+      throw error
     }
   }
 
@@ -113,28 +89,28 @@ export default function Courses() {
     if (!courseToDelete) return
 
     const id = courseToDelete.id
+    const taskCount = liveTaskCount
 
     await deleteCourse(id)
+    setDeletedTaskCount(taskCount)
 
-    setCourses((prev) => {
-      const updatedCourses = prev.filter(
-        (course) => course.id !== id
-      )
+    const newTotalPages = Math.max(
+      1,
+      Math.ceil((courses.length - 1) / COURSES_PER_PAGE)
+    )
 
-      const newTotalPages = Math.max(
-        1,
-        Math.ceil(
-          updatedCourses.length / COURSES_PER_PAGE
-        )
-      )
-
-      setCurrentPage((current) =>
-        Math.min(current, newTotalPages)
-      )
-
-      return updatedCourses
-    })
+    setCurrentPage((current) =>
+      Math.min(current, newTotalPages)
+    )
   }
+
+  /* Deleting a course takes its tasks with it, so the dialog says how many.
+     The count is kept once the delete succeeds, because by then the tasks are
+     gone from the list and the success message would read zero. */
+  const liveTaskCount = courseToDelete
+    ? tasks.filter((t) => String(t.courseId) === String(courseToDelete.id)).length
+    : 0
+  const tasksInCourseToDelete = deletedTaskCount ?? liveTaskCount
 
   /* The semester a course belongs to is read off its created_at. */
   const visibleCourses = filterBySemester(courses, semester)
@@ -181,9 +157,9 @@ export default function Courses() {
           }}
         />
 
-        {error && (
+        {(error || loadError) && (
           <div className="course-error">
-            {error}
+            {error || loadError}
           </div>
         )}
 
@@ -214,16 +190,32 @@ export default function Courses() {
 
             <DeleteConfirmDialog
               open={!!courseToDelete}
-              onCancel={() => setCourseToDelete(null)}
+              onCancel={() => {
+                setCourseToDelete(null)
+                setDeletedTaskCount(null)
+              }}
               title="Delete this course?"
               message={
                 <>
-                  "{courseToDelete?.name}" will be permanently removed.
-                  This cannot be undone.
+                  "{courseToDelete?.name}"
+                  {tasksInCourseToDelete > 0 && (
+                    <>
+                      {' '}and its{' '}
+                      <strong>
+                        {tasksInCourseToDelete}{' '}
+                        {tasksInCourseToDelete === 1 ? 'task' : 'tasks'}
+                      </strong>
+                    </>
+                  )}{' '}
+                  will be permanently removed. This cannot be undone.
                 </>
               }
               successTitle="Course deleted successfully"
-              successMessage={`"${courseToDelete?.name}" has been removed.`}
+              successMessage={
+                tasksInCourseToDelete > 0
+                  ? `"${courseToDelete?.name}" and its ${tasksInCourseToDelete} ${tasksInCourseToDelete === 1 ? 'task have' : 'tasks have'} been removed.`
+                  : `"${courseToDelete?.name}" has been removed.`
+              }
               onConfirm={handleConfirmDelete}
             />
 
